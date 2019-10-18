@@ -1,4 +1,3 @@
-# Syphilis Project
 import subprocess
 import argparse
 import sys
@@ -273,12 +272,17 @@ if __name__ == '__main__':
 	is_pacbio = args.pacbio
 	is_illumina = args.illumina
 
+	# Right now the flag for input format is only to distinguish where the read name and read is.
+	# Generally, fasta files are in a chunk of 2, fastq in a chunk of 4.
 	if input_format in ["fasta", "fastq"]:
 		print("Input format is " + input_format + ". Reading all " + input_format + " files in this folder. ")
 	else:
 		print("ERROR: Please specify either fasta or fastq for -i.")
 		sys.exit()
 
+	# Specifying whether the file is PacBio and Illumina changes how the program counts for each read.
+	# Currently we assume PacBio sequences will be RAD-ified and in a specific format (i.e. >seq1_274) where
+	# the reads have been clustered and the read count will be after one underscore.
 	if is_pacbio and is_illumina:
 		print("ERROR: -pacbio and -illumina are not compatible. Please select only one. ")
 		sys.exit()
@@ -286,13 +290,16 @@ if __name__ == '__main__':
 		print("ERROR: Please select either -pacbio or -illumina.")
 		sys.exit()
 
+	# The all assignments file is a list of all the reads and what regions they mapped to, along with both
+	# the nucleotide sequence and the amino acid sequence.
 	all_assignments = open("all_assignments.csv", "w+")
 
 	for file in os.listdir(current_dir):
 		if file.endswith(input_format):
+			# Matches each read to a region and starts building a list.
 			find_region(file, input_format, is_pacbio, current_dir)
-
 			strain_name = file.split("." + input_format)[0]
+			# Builds the frequency final_table.csv for each file.
 			make_table(strain_name, current_dir)
 			V1_list = list()
 			V2_list = list()	
@@ -309,8 +316,3 @@ if __name__ == '__main__':
 			V6_count = 0	
 			V7_count = 0
 	
-	# Call the visualizer.
-	# subprocess.call('python3 ' + dir_path + '/syph_visualizer.py ' + current_dir + '/final_data.csv', shell=True)
-	# subprocess.call('python3 ' + dir_path + '/syph_network.py ' + current_dir + '/all_assignments.csv ' + current_dir + '/final_data.csv', shell=True)
-
-# samtools view 148B-TPRK3.bam|awk '{print$3 "\t" $4 "\t" $4+length($10)-1}' > pos.txt
