@@ -21,13 +21,20 @@ opt <- parse_args(opt_parser)
 path <- opt$directory
 script.dir <- opt$script_path
 
+#####
+
 ## To run this script manually in R, uncomment the following lines. You do not need to change the preceding lines of path and script.dir,
 ## but remember to recomment the lines if you want to run the script automatically in the pipeline.
-
-## path refers to the folder your metadata.csv and sequencing files (.fastq) are.
-#path <- "/Users/uwvirongs/Documents/Michelle/tprk_pipeline/AS_files"
+## path refers to the folder your metadata.csv and sequencing files (.fastq) are. (This is the -directory option).
 ## script.dir refers to the folder where all the script files are located. This should point to where you saved the cloned GitHub.
+
+#path <- "/Users/uwvirongs/Documents/Michelle/tprk_pipeline/AS_files"
 #script.dir <- "/Users/uwvirongs/Documents/tprK-master/"
+
+## This script can also be run from the command line.
+## Usage: rscript \path\to\og_files_to_all_reads.R -s [script_path] -d [directory]
+
+#####
 
 metadata <- read.table(paste(path,"/metadata.csv", sep=''), sep=',', header=TRUE)
 setwd(path)
