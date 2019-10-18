@@ -131,6 +131,8 @@ for (count in c(1:length(awk_command))) {
 
 print("Making PacBio frequency files...")
 # Calls syph_r to make the final_data.csv for each PacBio sample.
+# TODO: right now this doesn't work if it's a repeat run because of previous .fastq files. Fix so you can rerun safely
+# without having to delete stuff when rerunning.
 syph_path <- paste(script.dir,"/syph_r.py",sep='')
 for (num in c(1:length(PacBio_freq_path))) {
   syphrPacBio_command <- paste("/Library/Frameworks/Python.framework/Versions/3.7/bin/python3 ",syph_path,
