@@ -6,7 +6,7 @@ if(length(new.packages)) install.packages(new.packages)
 # if (!requireNamespace("BiocManager", quietly = TRUE))
 #   install.packages("BiocManager")
 #   BiocManager::install(c("dada2"))
-lapply(list.of.packages,library,character.only=T)
+suppressMessages(invisible(lapply(list.of.packages,library,character.only=T)))
 
 
 ##Specifying Illumina vs. PacBio files, and what the sample name is.
@@ -27,7 +27,7 @@ script.dir <- opt$script_path
 ## path refers to the folder your metadata.csv and sequencing files (.fastq) are.
 #path <- "/Users/uwvirongs/Documents/Michelle/tprk_pipeline/AS_files"
 ## script.dir refers to the folder where all the script files are located. This should point to where you saved the cloned GitHub.
-#script.dir <- "/Users/uwvirongs/Documents/Michelle/tprk_pipeline"
+#script.dir <- "/Users/uwvirongs/Documents/tprK-master/"
 
 metadata <- read.table(paste(path,"/metadata.csv", sep=''), sep=',', header=TRUE)
 setwd(path)
@@ -60,7 +60,7 @@ filterEE1_filenames <- paste(substr(basename(PacBio_fns),1,nchar(basename(PacBio
 filt <- file.path(path,filter_filenames)
 filtEE1 <- file.path(path,filterEE1_filenames)
 
-##Filter reads for tprK length and do not worry about expected errors.
+## Filter reads for tprK length and do not worry about expected errors.
 for (count in c(1:length(filt))) {
   if (file.exists(filt[count])) {
     print(paste(filter_filenames[count]," already exists. Skipping filtering step..."), sep="")
@@ -90,7 +90,7 @@ for (count in c(1:length(filt))) {
   if(file.exists(to_rad_name)) {
     print(paste(to_rad_name, " already exists. Skipping RAD step...", sep=""))
   } else{
-    ## mind the path. In a typical Mac installation, it points to the Julia application in the Application folder
+    ## Mind the path. In a typical Mac installation, it points to the Julia application in the Application folder
     print("Setting up Julia...")
     julia <- julia_setup(JULIA_HOME = "/Applications/Julia-1.2.app/Contents/Resources/julia/bin/")
     julia_command("using Pkg")
@@ -113,6 +113,7 @@ RAD_files_fix <- paste(substr(RAD_files,1,nchar(RAD_files)-5),"nolines.fix.fasta
 PacBio_freq_path <- paste(path,"/PacBio_frequencies",sep='')
 RAD_files_fix_newdir <- file.path(PacBio_freq_path,basename(RAD_files_fix))
 mkdir_freq <- paste("mkdir ",PacBio_freq_path,sep='')
+# Copies the final PacBio files into the PacBio_frequencies folder. 
 system(mkdir_freq)
 copyPacBio <- paste("cp ",PacBio_fns,PacBio_freq_path,";")
 for (num in 1:length(copyPacBio)) {
@@ -120,6 +121,7 @@ for (num in 1:length(copyPacBio)) {
 }
 
 # Fixes up the fastas so they wrap and don't have awkward new lines.
+# TODO: fix this section so it works. For some reason the pipeline currently runs without it? But probably should fix this anyway.
 awk_command <- paste("awk '/^>/ {printf(\"\\n%s\\n\",$0);next; } { printf(\"%s\",$0);}  END {printf(\"\\n\");}' < ",RAD_files," > ",RAD_files_nolines," ;")
 fix_firstline <- paste("tail -n +2 ",RAD_files_nolines," > ",RAD_files_fix_newdir)
 for (count in c(1:length(awk_command))) {
@@ -141,6 +143,8 @@ PacBio_freq_files = list.files(PacBio_freq_path,pattern="*_final_data.csv")
 PacBio_freq_files_fullpath = list.files(PacBio_freq_path,pattern="*_final_data.csv",full.names=T)
 compare_PacBio_df <- data.frame(Region=character(),Read=character())
 
+# Renames the columns attaching PB and sample name to relative frequency and count so we can 
+# mash everything together into a big dataframe.
 for (i in 1:length(PacBio_freq_files)) {
   PacBioFreqtitle <- paste("PB_",sample_names[i],"_RelativeFreq",sep='')
   PacBioCounttitle <- paste("PB_",sample_names[i],"_Count",sep='')
@@ -153,12 +157,15 @@ if (opt$pacbio) {
 } else {
   print("Making Illumina frequency files...")
   Illumina_freq_path <- paste(path,"/Illumina_frequencies",sep='')
+
+  # Copies Illumina files into Illumina_frequencies subdirectory.
   mkdir_freq <- paste("mkdir ",Illumina_freq_path,sep='')
   system(mkdir_freq)
   copyIllumina <- paste("cp ",Illumina_fns,Illumina_freq_path,";")
   for (num in 1:length(copyIllumina)) {
     system(copyIllumina[num])
   }
+  # Creates frequency files for Illumina (final_data.csvs).
   syphrIllumina_command <- paste("/Library/Frameworks/Python.framework/Versions/3.7/bin/python3 ",syph_path," -i fastq -illumina -d ",Illumina_freq_path,"/ ;",sep='')
   system(syphrIllumina_command)
 }
@@ -169,14 +176,15 @@ if (opt$pacbio) {
   allreads_out <- paste(path,"/allreads.csv",sep='')
   write.csv(allreads,file=allreads_out,row.names=FALSE,quote=FALSE)
 } else {
-  ##Make Illumina frequency comparison file
+  # Makes Illumina frequency comparison file
   Illumina_freq_files = list.files(Illumina_freq_path,pattern="*_final_data.csv")
   Illumina_freq_files_fullpath = list.files(Illumina_freq_path,pattern="*_final_data.csv",full.names=T)
-  
   compare_Illumina_df <- data.frame(Region=character(),Read=character())
   #svgIllumina_command <- paste("/usr/bin/python /Users/uwvirongs/Documents/Michelle/syphilis/syph_visualizer_single_svg.py ",Illumina_freq_files_fullpath,sep='')
   #for (num in length(svgIllumina_command)) system(svgIllumina_command[num])
   
+  # Renames columns to attach Ill_ and sample name onto relative frequency and count columns so we can mash everything
+  # together into a big dataframe.
   for (i in 1:length(Illumina_freq_files)) {
     IlluminaFreqtitle <- paste("Ill_",sample_names[i],"_RelativeFreq",sep='')
     IlluminaCounttitle <- paste("Ill_",sample_names[i],"_Count",sep='')
