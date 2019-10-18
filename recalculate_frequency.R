@@ -1,3 +1,6 @@
+# Recalculates relative frequency given a pre-filtered file (i.e. allreads_filtered.csv).
+# This step is done in the tprk_pipeline.py. recalculate_frequency.R will replace the file. 
+
 library("optparse")
 
 option_list <- list(make_option(c("-d", "--directory"), type="character", default=NULL, help="Specify working directory", metavar="character"),
@@ -8,11 +11,29 @@ opt <- parse_args(opt_parser)
 
 path <- opt$directory
 filename <- (opt$filename)
-#path <- "/Users/uwvirongs/Documents/Michelle/tprk_pipeline/AS_files/"
+
+#####
+
+## To run this script manually in R, uncomment the following lines. You do not need to change the preceding line of path
+## but remember to recomment the lines if you want to run the script automatically in the pipeline.
+## path refers to the folder your metadata.csv and sequencing files (.fastq) are.
+## filename refers to the pre-filtered file (i.e. allreads_filtered.csv) that you want to recalculate frequencies for.
+
+#path <- "/Users/uwvirongs/Documents/Michelle/tprk_pipeline/AS_files"
+#filename <- "allreads_filtered.csv"
+
+## This script can also be run from the command line.
+## Usage: rscript \path\to\recalculate_frequemcy.R -d [path] -f [file_name]
+
+#####
 
 allreads_filtered <- read.table(opt$filename, sep=',', header=TRUE)
 allreads_filtered1 <- allreads_filtered
+
+# Grabs the actual number of samples.
 numsamples <- (length(colnames(allreads_filtered)) - 2) / 4
+
+# Loops through samples and recalculates frequency for each sample (column) for each region.
 for (sample in c(1:numsamples)){
   freqcol <- (sample * 2) + 1
   countcol <- (sample * 2) + 2
@@ -25,4 +46,6 @@ for (sample in c(1:numsamples)){
 
 #out_filename <- substr(filename,1,nchar(filename)-4)
 #allreads_out <- paste(path,"/",out_filename,".csv",sep='')
+
+# Rewrites the file with the newly calculated relative frequencies.
 write.csv(allreads_filtered1,file=filename,row.names=FALSE,quote=FALSE)
