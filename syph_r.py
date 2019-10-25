@@ -1,3 +1,4 @@
+# Syphilis Project
 import subprocess
 import argparse
 import sys
@@ -16,13 +17,13 @@ V4_list = list()
 V5_list = list()	
 V6_list = list()	
 V7_list = list()	
-V1_count = 0	
-V2_count = 0	
-V3_count = 0	
-V4_count = 0	
-V5_count = 0	
-V6_count = 0	
-V7_count = 0
+V1_dna = list()
+V2_dna = list()
+V3_dna = list()
+V4_dna = list()
+V5_dna = list()
+V6_dna = list()
+V7_dna = list()
 
 # Takes in the input file and goes through line by line, defining the read name and read sequence.
 # Puts the read sequence through region_seq to match each read to the variable region/
@@ -74,11 +75,12 @@ def region_seq(read_seq, read_name, sample_name, is_pacbio, current_dir):
 	for region, primer in variable_regions.items():
 		# If a read matches the primer with fuzzy matching less than 3 errors, then continue
 		# Also reverses the read and tries that too
-
 		read_seq_rev = str((Seq(read_seq, generic_dna).reverse_complement()))
 		match_seq = regex.findall(primer + "{e<=3}", read_seq)
 		match_seq_rev = regex.findall(primer + "{e<=3}", read_seq_rev)
 
+		# Illumina reads are read as one read = one count. PacBio reads are assumed to be RAD, and counts are
+		# found after the underscore in the read name.
 		if is_pacbio==False:
 			# read_name = read_name.split('-')[0]
 			read_count = 1
@@ -87,6 +89,7 @@ def region_seq(read_seq, read_name, sample_name, is_pacbio, current_dir):
 			read_count = int(float(read_name.split('_')[1].rstrip()))
 
 		if match_seq or match_seq_rev:
+			end = 0
 			if match_seq_rev:
 				read_seq = read_seq_rev
 				match_seq = match_seq_rev
@@ -94,114 +97,74 @@ def region_seq(read_seq, read_name, sample_name, is_pacbio, current_dir):
 				start = (str.index(read_seq, match_seq[0]) + 21)
 				if fuzzy_match(read_seq, "CCAGGCCAGCTCCGCA"):
 					end = (str.index(read_seq, fuzzy_match(read_seq, "CCAGGCCAGCTCCGCA")))
-					# Grabs what we now found as the region
-					region_seq = read_seq[start:end]
-					# Translates the sequence
-					region_nuc = str((Seq(region_seq, generic_dna).reverse_complement()))
-					region_seq = translate_nucs(region_nuc)
-					all_assignments.write(read_name.rstrip()  + "," + region_seq + "," + region_nuc + ",V1"+ "\n")
-
-					# If the sequence is already in a global list of sequences for this region,
-					# which is in [read sequence, count] format, increase the count by 1
-					if (region_seq in chain(*V1_list)):
-						for sublist in V1_list:
-							if (sublist[0] == region_seq):
-								sublist[1] = sublist[1] + read_count
-					# Otherwise, add this sequence to the global list of sequences for this region
-					else:
-						V1_list.append([region_seq, read_count])
-
+					v_list = V1_list
+					v_dna = V1_dna
 			elif (region == "V2"):
 				start = (str.index(read_seq, match_seq[0]) + 17)
 				if fuzzy_match(read_seq, "GTCGGTGTTAGACGCAA"):
 					end = (str.index(read_seq, fuzzy_match(read_seq, "GTCGGTGTTAGACGCAA")))
-					region_seq = read_seq[start:end]
-					region_nuc = str((Seq(region_seq, generic_dna).reverse_complement()))
-					region_seq = translate_nucs(region_nuc)
-					all_assignments.write(read_name.rstrip()  + "," + region_seq + "," + region_nuc + ",V2"+ "\n")
-					if (region_seq in chain(*V2_list)):
-						for sublist in V2_list:
-							if (sublist[0] == region_seq):
-								sublist[1] = sublist[1] + read_count
-					else:
-						V2_list.append([region_seq, read_count])
-
+					v_list = V2_list
+					v_dna = V2_dna
 			elif (region == "V3"):
 				start = (str.index(read_seq, match_seq[0]) + 20)
 				if fuzzy_match(read_seq, "GGAGTTGCCGGT"):
 					end = (str.index(read_seq, fuzzy_match(read_seq, "GGAGTTGCCGGT")))
-					region_seq = read_seq[start:end]
-					region_nuc = str((Seq(region_seq, generic_dna).reverse_complement()))
-					region_seq = translate_nucs(region_nuc)
-					all_assignments.write(read_name.rstrip()  + "," + region_seq + "," + region_nuc + ",V3"+ "\n")
-					if (region_seq in chain(*V3_list)):
-						for sublist in V3_list:
-							if (sublist[0] == region_seq):
-								sublist[1] = sublist[1] + read_count
-					else:
-						V3_list.append([region_seq, read_count])
-
+					v_list = V3_list
+					v_dna = V3_dna
 			elif (region == "V4"):
 				start = (str.index(read_seq, match_seq[0]) + 15)
 				if fuzzy_match(read_seq, "AGCAGCCAGAGCACAC"):
 					end = (str.index(read_seq, fuzzy_match(read_seq, "AGCAGCCAGAGCACAC")))
-					region_seq = read_seq[start:end]
-					region_nuc = str((Seq(region_seq, generic_dna).reverse_complement()))
-					region_seq = translate_nucs(region_nuc)
-					all_assignments.write(read_name.rstrip()  + "," + region_seq + "," + region_nuc + ",V4"+ "\n")
-					if (region_seq in chain(*V4_list)):
-						for sublist in V4_list:
-							if (sublist[0] == region_seq):
-								sublist[1] = sublist[1] + read_count
-					else:
-						V4_list.append([region_seq, read_count])
-
+					v_list = V4_list
+					v_dna = V4_dna
 			elif (region == "V5"):
 				# Find the beginning of the region following the primer
 				start = (str.index(read_seq, match_seq[0]) + 16)
 				# Find the end of the region
 				if fuzzy_match(read_seq, "CGATGCGAAATA"):
 					end = (str.index(read_seq, fuzzy_match(read_seq, "CGATGCGAAATA")))
-					region_seq = read_seq[start:end]
-					region_nuc = str((Seq(region_seq, generic_dna).reverse_complement()))
-					region_seq = translate_nucs(region_nuc)
-					all_assignments.write(read_name.rstrip()  + "," + region_seq + "," + region_nuc + ",V5"+ "\n")
-					if (region_seq in chain(*V5_list)):
-						for sublist in V5_list:
-							if (sublist[0] == region_seq):
-								sublist[1] = sublist[1] + read_count
-					else:
-						V5_list.append([region_seq, read_count])
-
+					v_list = V5_list
+					v_dna = V5_dna
 			elif (region == "V6"):
 				start = (str.index(read_seq, match_seq[0]) + 16)
 				if fuzzy_match(read_seq, "CATGTACGTACG"):
 					end = (str.index(read_seq, fuzzy_match(read_seq, "CATGTACGTACG")))
-					region_seq = read_seq[start:end]
-					region_nuc = str((Seq(region_seq, generic_dna).reverse_complement()))
-					region_seq = translate_nucs(region_nuc)
-					all_assignments.write(read_name.rstrip()  + "," + region_seq + "," + region_nuc + ",V6"+ "\n")
-					if (region_seq in chain(*V6_list)):
-						for sublist in V6_list:
-							if (sublist[0] == region_seq):
-								sublist[1] = sublist[1] + read_count
-					else:
-						V6_list.append([region_seq, read_count])
-
+					v_list = V6_list
+					v_dna = V6_dna
 			elif (region == "V7"):
 				start = (str.index(read_seq, match_seq[0]) + 12)
 				if fuzzy_match(read_seq, "CAAGTTTGCATACACTT"):
 					end = (str.index(read_seq, fuzzy_match(read_seq, "CAAGTTTGCATACACTT")))	
-					region_seq = read_seq[start:end]
-					region_nuc = str((Seq(region_seq, generic_dna).reverse_complement()))
-					region_seq = translate_nucs(region_nuc)
-					all_assignments.write(read_name.rstrip()  + "," + region_seq + "," + region_nuc + ",V7"+ "\n")
-					if (region_seq in chain(*V7_list)):
-						for sublist in V7_list:
-							if (sublist[0] == region_seq):
-								sublist[1] = sublist[1] + read_count
-					else:
-						V7_list.append([region_seq, read_count])
+					v_list = V7_list
+					v_dna = V7_dna
+
+
+			if end != 0:
+				# Grabs what we now found as the region
+				region_seq = read_seq[start:end]
+				# Translates the sequence
+				region_nuc = str((Seq(region_seq, generic_dna).reverse_complement()))
+				region_seq = translate_nucs(region_nuc)
+				all_assignments.write(sample_name + "," + read_name.rstrip()  + "," + region_seq + "," + 
+					region_nuc + "," + region + "\n")
+
+				# If the sequence is already in a global list of sequences for this region,
+				# which is in [read sequence, count] format, increase the count by 1
+				if (region_seq in chain(*v_list)):
+					for sublist in v_list:
+						if (sublist[0] == region_seq):
+							sublist[1] = sublist[1] + read_count
+				# Otherwise, add this sequence to the global list of sequences for this region
+				else:
+					v_list.append([region_seq, read_count])
+
+				# Do the same thing for DNA.
+				if (region_nuc in chain(*v_dna)):
+					for sublist in v_dna:
+						if (sublist[0] == region_nuc):
+							sublist[1] = sublist[1] + read_count
+				else:
+					v_dna.append([region_nuc, read_count])
 
 # Finds the total number of reads that mapped to a region.
 def total_count(region_list):
@@ -212,33 +175,23 @@ def total_count(region_list):
 
 # Makes the final data table in csv format, with columns Region, Read, RelativeFreq, Count.
 def make_table(strain_name, current_dir):
+	Vlist_of_aas = [V1_list, V2_list, V3_list, V4_list, V5_list, V6_list, V7_list]
+	Vlist_of_dna = [V1_dna, V2_dna, V3_dna, V4_dna, V5_dna, V6_dna, V7_dna]
+	variable_regions = ["V1", "V2", "V3", "V4", "V5", "V6", "V7"]
 	table = open(current_dir + "/" + strain_name + "_final_data.csv", "w+")
-	table.write("Region,Read,RelativeFreq, Count" + "\n")
-	for read_seq, count in V1_list:
-		total = total_count(V1_list)
-		table.write("V1," + read_seq + "," + str(((count / total) * 100)) + "," + str(count) + "\n")
-	for read_seq, count in V2_list:
-		total = total_count(V2_list)
-		table.write("V2," + read_seq + "," + str(((count / total) * 100)) + "," + str(count) + "\n")
-	for read_seq, count in V3_list:
-		total = total_count(V3_list)
-		table.write("V3," + read_seq + "," + str(((count / total) * 100)) + "," + str(count) + "\n")
-
-	for read_seq, count in V4_list:
-		total = total_count(V4_list)
-		table.write("V4," + read_seq + "," + str(((count / total) * 100)) + "," + str(count) + "\n")
-
-	for read_seq, count in V5_list:
-		total = total_count(V5_list)
-		table.write("V5," + read_seq + "," + str(((count / total) * 100)) + "," + str(count) + "\n")
-
-	for read_seq, count in V6_list:
-		total = total_count(V6_list)
-		table.write("V6," + read_seq + "," + str(((count / total) * 100)) + "," + str(count) + "\n")
-
-	for read_seq, count in V7_list:
-		total = total_count(V7_list)
-		table.write("V7," + read_seq + "," + str(((count / total) * 100)) + "," + str(count) + "\n")
+	table2 = open(current_dir + "/over5count_" + strain_name + "_final_data_dna.csv", "w+")
+	table.write("Region,Read,RelativeFreq,Count" + "\n")
+	table2.write("Region,Read,RelativeFreq,Count" + "\n")
+	for index, v_list in enumerate(Vlist_of_aas):
+		for read_seq, count in v_list:
+			total = total_count(v_list)
+			table.write(variable_regions[index] + "," + read_seq + "," + 
+				str(((count / total) * 100)) + "," + str(count) + "\n")
+	for index, v_list in enumerate(Vlist_of_dna):
+		for read_seq, count in v_list:
+			total = total_count(v_list)
+			table2.write(variable_regions[index] + "," + read_seq + "," + 
+				str(((count / total) * 100)) + "," + str(count) + "\n")
 
 	# Filters out the lines with greater than 1% to a separate _final_data_fitered.csv.
 	#subprocess.call("awk -F\"[,|\\(]\" \'($3+0)>=1{print}\' " + strain_name + "_final_data.csv > " + strain_name + "_final_data_filtered.csv", shell=True)
@@ -307,12 +260,11 @@ if __name__ == '__main__':
 			V4_list = list()	
 			V5_list = list()	
 			V6_list = list()	
-			V7_list = list()	
-			V1_count = 0	
-			V2_count = 0	
-			V3_count = 0	
-			V4_count = 0	
-			V5_count = 0	
-			V6_count = 0	
-			V7_count = 0
-	
+			V7_list = list()
+			V1_dna = list()
+			V2_dna = list()
+			V3_dna = list()
+			V4_dna = list()
+			V5_dna = list()
+			V6_dna = list()
+			V7_dna = list()
