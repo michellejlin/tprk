@@ -5,7 +5,9 @@ library("optparse")
 
 option_list <- list(make_option(c("-d", "--directory"), type="character", default=NULL, help="Specify working directory", metavar="character"),
                     make_option(c("-f", "--filename"), type="character", default=NULL, help="Specify file to recalculate frequency.", 
-                                metavar="character"));
+                                metavar="character"),
+                    make_option(c("-i", "--illumina_check"), type="character", default=FALSE, help="Specify if these files are only PacBio.", 
+                                metavar="character", action="store_true"));
 opt_parser <- OptionParser(option_list=option_list);
 opt <- parse_args(opt_parser)
 
@@ -28,10 +30,26 @@ filename <- (opt$filename)
 #####
 
 allreads_filtered <- read.table(opt$filename, sep=',', header=TRUE)
-allreads_filtered1 <- allreads_filtered
-
 # Grabs the actual number of samples.
 numsamples <- (length(colnames(allreads_filtered)) - 2) / 4
+metadata <- read.table(paste(path,"/metadata.csv", sep=''), sep=',', header=TRUE)
+sample_names <- c(as.character(metadata$SampleName))
+
+# TODO: Implement Illumina check.
+# if(opt$illumina_check) {
+#   for (i in c(1:length(sample_names))) {
+#     IlluminaCounttitle <- paste("Ill_",sample_names[i],"_Count",sep='')
+#     illumina_filtered <- allreads_filtered[allreads_filtered[[IlluminaCounttitle]] < 5 ,]
+#     illumina_filtered <- which(allreads_filtered[IlluminaCounttitle] < 5, arr.ind)
+#     allreads_filtered1[illumina_filter]
+#     for (j in allreads_filtered[IlluminaCounttitle]) {
+#       if(j>=5) {
+#         print(j)
+#       }
+#   }
+# }
+
+allreads_filtered1 <- allreads_filtered
 
 # Loops through samples and recalculates frequency for each sample (column) for each region.
 for (sample in c(1:numsamples)){
