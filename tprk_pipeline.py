@@ -88,12 +88,17 @@ if __name__ == '__main__':
 		'Otherwise, will look for metadata.csv.')
 	parser.add_argument('-f', '--relative_freq_filter', required=False,
 		help='Specify by what relative frequency an additional filtered final merged table and visualizations should be sorted at. '
-		'By default, this is set to 0.5.')
+		'By default, this is set to 0.2.')
 	parser.add_argument('-c', '--count_filter', required=False,
 		help='Specify by what count an additional filtered final merged table and visualizations should be sorted at. '
 		'By default, this is set to 5.')
+	parser.add_argument('-i', '--illumina_filter', action='store_true', required=False,
+		help='Specify if PacBio reads should only include Illumina-supported reads that pass the filters given. '
+		'By default, relative freq is set to 0.2 and count is set to 5.')
 	parser.add_argument('-pacbio', action='store_true', required = False, help='Write this flag to specify '
 		'that there are only PacBio files here. Comparison figures to Illumina will not be created.')
+	parser.add_argument('-illumina', action='store_true', required = False, help='Write this flag to specify '
+		'that there are only Illumina files here. Comparison figures to PacBio will not be created.')
 
 	try:
 		args = parser.parse_args()
@@ -104,7 +109,9 @@ if __name__ == '__main__':
 	# Setting variables 
 	if args.metadata_file:
 		metadata_file = args.metadata_file
+		print("Metadata file is " + args.metadata_file)
 	else:
+		print("Metadata file not specified. Using metadata.csv.")
 		metadata_file = "metadata.csv"
 
 	if args.relative_freq_filter:
@@ -119,6 +126,10 @@ if __name__ == '__main__':
 		pacbio_flag = "--pacbio"
 	else:
 		pacbio_flag = ""
+	if args.illumina:
+		illumina_flag = "--illumina"
+	else:
+		illumina_flag = ""
 
 	script_path = os.path.dirname(os.path.realpath(__file__))
 	cwd = os.getcwd()
@@ -140,14 +151,15 @@ if __name__ == '__main__':
 		pacbio_samples_list.append(pacbio_sample)
 
 
-	print("Will filter final products for > " + str(relative_freq_filter) + " relative frequency and > " + str(count_filter) + " count...")
-	
+	print("Will filter final products for > " + str(relative_freq_filter) + " relative frequency and > " + str(count_filter) + " count.")
+	if args.illumina_filter:
+		print("Will only include PacBio reads supported by Illumina reads that pass the filter.")
 
 	# Goes from the original Illumina and PacBio reads into the all-important allreads.csv. 
 	# Along the way, also makes frequency tables for each sample. 
-	print("Running og_files_to_all_reads.py...")
+	print("Running og_files_to_all_reads.py...\n")
 	subprocess.call("rscript " + script_path + "/og_files_to_all_reads.R -s " + script_path + " -d " + cwd + " " + 
-		pacbio_flag, shell=True)
+		pacbio_flag + " " + illumina_flag, shell=True)
 
 	# Creates allreads_filtered.csv and recalculates the relative frequencies.
 	filter_table(relative_freq_filter, count_filter, cwd + "/allreads.csv")
@@ -160,21 +172,22 @@ if __name__ == '__main__':
 
 	# Creates Bokeh frequency plots from the frequency files (all the final_data.csvs).
 	# Currently this generates .html plots only, for both filtered and non-filtered for each sample.
-	bokeh_freq_plot(script_path, cwd + "/PacBio_frequencies", figure_output_path, relative_freq_filter, count_filter)
+	if not args.illumina:
+		bokeh_freq_plot(script_path, cwd + "/PacBio_frequencies", figure_output_path, relative_freq_filter, count_filter)
 	if not args.pacbio:
 		bokeh_freq_plot(script_path, cwd + "/Illumina_frequencies", figure_output_path, relative_freq_filter, count_filter)
 
 	# Generates PacBio vs. Illumina scatterplots for each sample. Compares filtered and non-filtered side by side,
 	# as well as automatically generates a zoomed in version from 0-10% relative frequency.
-	if not args.pacbio:
+	# Does not occur if running only PacBio or only Illumina files.
+	if (not args.pacbio and not args.illumina):
 		for num in range(1, len(sample_names_list)):
 			print("Generating PacBio vs. Illumina plots for " + sample_names_list[num] + "...")
 			subprocess.call("rscript " + script_path + "/PacBio_v_Illumina_plots.R -p " + cwd + 
 				" -s " + sample_names_list[num], shell=True)
 	else:
-		print("-pacbio specified. Will not generate PacBio vs. Illumina plots.")
+		print("-pacbio or -illumina specified. Will not generate PacBio vs. Illumina plots.")
 
-	
 	# Creates a subfolder in the Figures folder for the variable region comparisons to attempt to contain madness.
 	comparison_plots_path = cwd + "/Figures/Variable_Region_Comparisons/"
 	if not os.path.exists("Figures/Variable_Region_Comparisons"):
@@ -182,10 +195,14 @@ if __name__ == '__main__':
 
 	# Creates dot-line plots comparing variable regions between two samples at a time.
 	# Lines connect the same tprK region in both samples. Dots indicate that read exists only in that sample.
-	print("Generating variable region comparison plots...")
-	subprocess.call("rscript " + script_path + "/Variable_region_compare.R -p " + cwd, shell=True)
+	# Currently this uses Illumina data.
+	if not args.pacbio:
+		print("Generating variable region comparison plots...")
+		subprocess.call("rscript " + script_path + "/Variable_region_compare.R -p " + cwd, shell=True)
 
 	# Creates a tree based off the filtered cumulative data (alldata_filtered.csv). 
 	# Currently no rooting takes place (until somebody figures out how to automate that).
-	print("Generating tree...")
-	subprocess.call("rscript " + script_path + "/PacBio2Tree.R -d " + cwd, shell=True)
+	# Currently this uses PacBio data.
+	if not args.illumina:
+		print("Generating tree...")
+		subprocess.call("rscript " + script_path + "/PacBio2Tree.R -d " + cwd, shell=True)
