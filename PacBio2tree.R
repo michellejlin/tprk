@@ -1,3 +1,8 @@
+# Creates a ggtree of all the PacBio samples. The script takes the path and will loop through
+# all the final fastas to generate the tree. 
+# Currently this script does not root (until I figure out a way to automatically do that?)
+# TODO: Include Illumina check.
+
 if (!requireNamespace("BiocManager", quietly = TRUE)){
   install.packages("BiocManager") }
 BiocManager::install("treeio")
@@ -10,9 +15,21 @@ option_list <- list(make_option(c("-d", "--directory"), type="character", defaul
 opt_parser <- OptionParser(option_list=option_list);
 opt <- parse_args(opt_parser)
 
-##Finding files in directory
 path <- opt$directory
-#path <- "/Users/uwvirongs/Documents/Michelle/tprk_pipeline/testing/"
+
+#####
+
+## To run this script manually in R, uncomment the following lines. You do not need to change the preceding lines of path and script.dir,
+## but remember to recomment the lines if you want to run the script automatically in the pipeline.
+## path refers to the folder your metadata.csv and sequencing files (.fastq) are.
+
+#path <- "/Users/uwvirongs/Documents/Michelle/tprk_pipeline/AS_files"
+
+## This script can also be run from the command line.
+## Usage: rscript \path\to\PacBio2tree.R -d [directory]
+
+#####
+
 setwd(paste(path,"/PacBio_frequencies", sep=""))
 metadata <- read.table(paste(path,"/metadata.csv", sep=''), sep=',', header=TRUE)
 PacBio_fns <- c(as.character(metadata$PacBio))
@@ -42,6 +59,7 @@ removeTruncatedORF=function(AAFile){
   }
   return(AAFile)
 }
+
 fasta_files <- list()
 df_list <- list()
 aa_list <- list()
@@ -49,6 +67,7 @@ df_aa_list <- list()
 df_aa_filtered_list <- list()
 allAA <- list()
 allAAfilt <- list()
+
 for (i in 1:length(PacBio_fns)) {
   fastafile_name <- paste((substr(PacBio_fns[i],1,nchar(PacBio_fns[i])-6)),".noprimers.filtered.RAD.nolines.fix.fasta",sep="")
   fastafile <- reverseComplement(readDNAStringSet(fastafile_name))
@@ -85,16 +104,15 @@ AAoutfile <- "Isolates_aa_fullORFs.fasta"
 AAoutfilefilt <- "Isolates_aa_filt_fullORFs.fasta"
 
 writeXStringSet(allAA_fullORFs_BString, AAoutfile, append=FALSE,format="fasta")
-writeXStringSet(allAAfilt_fullORFs_BString, AAoutfilefilt, append=FALSE,format="fasta")
+writeXStringSet(allAAfilt_fullORFs_BString, paste(path,"/",AAoutfilefilt,sep=""), append=FALSE,format="fasta")
 
 ## Need to include our Illumina check right here!  ###
 
 AAaln_outfile <- paste0(substr(AAoutfile,1,nchar(AAoutfile)-5),"aln.fasta")
 AAaln_outfile_filt <- paste0(substr(AAoutfilefilt,1,nchar(AAoutfilefilt)-5),"aln.fasta")
 
-
-mafft_command <- paste0("mafft --auto ",AAoutfile," > ",AAaln_outfile)
-system(mafft_command)
+#mafft_command <- paste0("mafft --auto ",AAoutfile," > ",AAaln_outfile)
+#system(mafft_command)
 
 mafft_command <- paste0("mafft --auto ",AAoutfilefilt," > ",AAaln_outfile_filt)
 system(mafft_command)
@@ -102,8 +120,8 @@ system(mafft_command)
 AAtree_outfile <-paste0(substr(AAoutfile,1,nchar(AAoutfile)-5),"aln.tree.nwk")
 AAtree_outfile_filt <-paste0(substr(AAaln_outfile_filt,1,nchar(AAaln_outfile_filt)-5),"aln.tree.nwk")
 
-fasttree_command <- paste0("fasttree ",AAaln_outfile," > ",AAtree_outfile)
-system(fasttree_command)
+#fasttree_command <- paste0("fasttree ",AAaln_outfile," > ",AAtree_outfile)
+#system(fasttree_command)
 fasttree_command <- paste0("fasttree ",AAaln_outfile_filt," > ",AAtree_outfile_filt)
 system(fasttree_command)
 
