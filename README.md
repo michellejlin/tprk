@@ -31,6 +31,7 @@ Now we have to make sure the script can be run from anywhere. Navigate to your m
 8. Type in `source ~/.bashrc` (or replace `bashrc` with `bash_profile` for Mac OSX), to refresh the file.
 
 Now we have to change the path of the Julia install in one of our files. 
+
 9. **Do not skip this step, people who are skimming!** Open up `og_files_to_all_reads.R` in your favorite text editor. Change the path on line 3 to point to the path where your Julia install is. Here's what the beginning should look like:
 
 ```python
