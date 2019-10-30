@@ -1,3 +1,7 @@
+##This line must be set up for PacBio file processing!
+##In a typical Mac installation, this path points to the Julia application in the Application folder.
+julia <- julia_setup(JULIA_HOME = "/Applications/Julia-1.2.app/Contents/Resources/julia/bin/")
+
 ##Install packages if haven't already
 list.of.packages <- c("JuliaCall", "reticulate", "devtools", "optparse", "devtools", "dada2", "ggplot2", "ShortRead",
                       "reshape2", "optparse")
@@ -100,9 +104,7 @@ if(opt$illumina == FALSE) {
     if(file.exists(to_rad_name)) {
       print(paste(to_rad_name, " already exists. Skipping RAD step...", sep=""))
     } else{
-      ## Mind the path. In a typical Mac installation, it points to the Julia application in the Application folder
       print("Setting up Julia...")
-      julia <- julia_setup(JULIA_HOME = "/Applications/Julia-1.2.app/Contents/Resources/julia/bin/")
       julia_command("using Pkg")
       julia_command("Pkg.add(PackageSpec(name=\"NextGenSeqUtils\", rev= \"1.0\", url = \"https://github.com/MurrellGroup/NextGenSeqUtils.jl.git\"))")
       julia_command("Pkg.add(PackageSpec(name=\"DPMeansClustering\", rev=\"1.0\", url = \"https://github.com/MurrellGroup/DPMeansClustering.jl.git\"))")
