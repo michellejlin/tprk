@@ -1,7 +1,6 @@
 # Creates a ggtree of all the PacBio samples. The script takes the path and will loop through
 # all the final fastas to generate the tree. 
 # Currently this script does not root (until I figure out a way to automatically do that?)
-# TODO: Include Illumina check.
 
 if (!requireNamespace("BiocManager", quietly = TRUE)){
   install.packages("BiocManager") }
@@ -30,7 +29,10 @@ path <- opt$directory
 
 #####
 
+# Works from the fasta files in the folder PacBio_frequencies
 setwd(paste(path,"/PacBio_frequencies", sep=""))
+
+# Grabs sample names and PacBio files from the metadata file
 metadata <- read.table(paste(path,"/metadata.csv", sep=''), sep=',', header=TRUE)
 PacBio_fns <- c(as.character(metadata$PacBio))
 sample_names <- c(as.character(metadata$SampleName))
@@ -130,6 +132,7 @@ tree <- read.newick(AAtree_outfile_filt)
 mycolors <- colorRampPalette(brewer.pal(name="Dark2", n = 8))(length(sample_names))
 #consider...
 #tree <- root(tree, which(tree$tip.label == "148B_seq86_220"))
+
 ##Expects tip labels to contain the sample name followed by a "_" and will parse the sample name accordingly.
 d2 = data.frame(taxa=tree$tip.label,sample=sapply(strsplit(tree$tip.label,"_"),"[",1),count=as.numeric(sapply(strsplit(tree$tip.label,"_"),"[",3)))
 d2 <- d2 %>% group_by(sample) %>% mutate(percentage=round(count / sum(count)*100,3))
