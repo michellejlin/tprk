@@ -23,7 +23,7 @@ path <- opt$directory
 ## but remember to recomment the lines if you want to run the script automatically in the pipeline.
 ## path refers to the folder your metadata.csv and sequencing files (.fastq) are.
 
-#path <- "/Users/uwvirongs/Documents/Michelle/tprk_pipeline/AS_files"
+#path <- "/Users/uwvirongs/Documents/Michelle/tprk_pipeline/testing2"
 
 ## This script can also be run from the command line.
 ## Usage: rscript \path\to\PacBio2tree.R -d [directory]
@@ -104,7 +104,7 @@ AAoutfile <- "Isolates_aa_fullORFs.fasta"
 AAoutfilefilt <- "Isolates_aa_filt_fullORFs.fasta"
 
 writeXStringSet(allAA_fullORFs_BString, AAoutfile, append=FALSE,format="fasta")
-writeXStringSet(allAAfilt_fullORFs_BString, paste(path,"/",AAoutfilefilt,sep=""), append=FALSE,format="fasta")
+writeXStringSet(allAAfilt_fullORFs_BString, paste(AAoutfilefilt,sep=""), append=FALSE,format="fasta")
 
 ## Need to include our Illumina check right here!  ###
 
