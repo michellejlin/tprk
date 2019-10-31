@@ -54,7 +54,7 @@ Put the following things in one folder:
     - Single-end Illumina reads trimmed and run through Trimmomatic
     - By default the pipeline expects both PacBio and Illumina files for every sample. Running the pipeline with just PacBio or just Illumina files is possible with the `-pacbio` and `-illumina` flags respectively. However, some plots require both files to be generated and these plots will not be output.
 - **Metadata file.** This should be a .csv with three columns: SampleName, PacBio, Illumina, shown in the table below.
-    - By default, the pipeline will look for a file named metadata.csv. You can rename and specify the name of the metadata file through the `-m` flag.
+    - This file should be called metadata.csv and placed in the same folder as your files to be analyzed.
     - There MUST be a newline character at the end of this file to be read as a valid csv. Simply hit enter in the last row to ensure there is a valid new line.
     - An example metadata file is provided. The general format of the metadata file should be three columns, separated by commas, as shown:
 
@@ -80,14 +80,13 @@ Running just PacBio files, filtering for relative frequency > 0.5 and count > 10
 
 `tprk_pipeline.py -f 0.5 -c 10 -pacbio`
 
-Filtering PacBio files with Illumina reads, using a different metadata.csv name:
+Filtering PacBio files with Illumina reads:
 
-`tprk_pipeline.py -m example_metadata.csv --illumina_filter`
+`tprk_pipeline.py --illumina_filter`
 
 ## Arguments
 | Command | Description |
 | --- | --- |
-| `-m`,`--metadata_file` | Specify name of metadata.csv file containing sample name, Illumina, and PacBio files. By default, the pipeline will search for `metadata.csv`. |
 | `-f`, `--relative_freq_filter` | Specify by what relative frequency an additional filtered final merged table and visualizations should be sorted at. By default, this is set to 0.2. |
 | `-c`, `--count_filter` | Specify by what count an additional filtered final merged table and visualizations should be sorted at. By default, this is set to 5. |
 | `-i`, `--illumina_filter` | Specify if PacBio reads should only include Illumina-supported reads that pass the filters given. By default, relative freq is set to 0.2 and count is set to 5. |
