@@ -11,7 +11,11 @@ This pipeline was designed to take Illumina and PacBio files straight off the se
 ## Setup
 **Installs**
 
-Make sure you have a working installation of [Python](https://www.python.org/) and [Julia](https://julialang.org/downloads/). 
+Make sure you have a working installation of [Python](https://www.python.org/) and [Julia](https://julialang.org/downloads/). You also need a few Python packages installed. You can do this by opening up terminal and entering in this line:
+
+`pip install argparse regex numpy biopython pandas bokeh`
+
+or use your favorite package manager to install those packages. 
 
 **Setting It Up**
 
@@ -46,16 +50,17 @@ That's it! Once you've changed the path, you're ready to do some tprK analysis!
 ## Input Files
 Put the following things in one folder:
 - **All the sequence files to run analysis on**
-    - PacBio Q20 files
-    - Illumina files trimmed and run through Trimmomatic
+    - PacBio Q20 reads
+    - Single-end Illumina reads trimmed and run through Trimmomatic
     - By default the pipeline expects both PacBio and Illumina files for every sample. Running the pipeline with just PacBio or just Illumina files is possible with the `-pacbio` and `-illumina` flags respectively. However, some plots require both files to be generated and these plots will not be output.
-- **Metadata file.** This should be a .csv with three columns: Sample Name, PacBio, Illumina, shown in the table below.
+- **Metadata file.** This should be a .csv with three columns: SampleName, PacBio, Illumina, shown in the table below.
     - By default, the pipeline will look for a file named metadata.csv. You can rename and specify the name of the metadata file through the `-m` flag.
+    - There MUST be a newline character at the end of this file to be read as a valid csv. Simply hit enter in the last row to ensure there is a valid new line.
     - An example metadata file is provided. The general format of the metadata file should be three columns, separated by commas, as shown:
 
-| Sample Name  | PacBio  | Illumina |
+| SampleName  | Illumina  | PacBio |
 | ------------- | ------------- | ------------- |
-| This will largely be the name used for generating tables and plots. | The PacBio file specified for the sample name. This must match exactly the name of the matching file in the folder. This should be a Q20 file.  | The Illumina file specified for the sample name. This must match exactly the name of the matching file in the folder. This should be a trimmed file run through Trimmomatic.|
+| This will largely be the name used for generating tables and plots. | The Illumina file specified for the sample name. This must match exactly the name of the matching file in the folder. This should be a trimmed file run through Trimmomatic. | The PacBio file specified for the sample name. This must match exactly the name of the matching file in the folder. This should be a Q20 file.  | 
 
 ## Usage
 With setup done and input files ready, we can move on to actually using the pipeline!
@@ -63,11 +68,21 @@ With setup done and input files ready, we can move on to actually using the pipe
 This can be done in a few simple steps:
 1. Open up terminal.
 2. Navigate to the folder with your sequencer files and metadata.csv file using `cd`, i.e. `cd Users/uwvirongs/Documents/tprk-master/`.
-3. Run the code! `tprk_pipeline.py metadata.csv`
+3. Run the code! `tprk_pipeline.py`
 
 Of course, that just runs the pipeline from start to finish, with completely default setup. To further specify arguments, refer to the [Arguments](#Arguments) section.
 
 Additionally, you might not want to run the whole pipeline from start to finish every time. To see what the individual components of the pipeline do and how to run them separately, refer to [Running Parts Separately](#Running-Parts-Separately).
+
+**Examples**
+
+Running just PacBio files, filtering for relative frequency > 0.5 and count > 10: 
+
+`tprk_pipeline.py -f 0.5 -c 10 -pacbio`
+
+Filtering PacBio files with Illumina reads, using a different metadata.csv name:
+
+`tprk_pipeline.py -m example_metadata.csv --illumina_filter`
 
 ## Arguments
 | Command | Description |
@@ -80,6 +95,10 @@ Additionally, you might not want to run the whole pipeline from start to finish 
 | `-illumina` | Write this flag to specify that there are only Illumina files here. Comparison figures to PacBio will not be created. | 
 
 ## Running Parts Separately
-You might not want to run the entire tprK pipeline from start to finish, every time. Here's a guide on what each component of this pipeline does and how to run them. 
+You might not want to run the entire tprK pipeline from start to finish, every time. 
 
-In general, this information will be located near the top of each individual file in a commented out section. 
+In general, this information will be located near the top of each individual file in a commented out section. Running the files individually can also be done through the terminal. For example, if you want to redo a tree, you could run from the terminal:
+
+`rscript PacBio2Tree.R -d [directory]`
+
+OR run the script in R, and change the indicated variables (in this case, the path variable in line 18).
