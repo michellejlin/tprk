@@ -83,9 +83,9 @@ def bokeh_freq_plot(script_path, cur_dir, new_dir, relative_freq_filter, count_f
 if __name__ == '__main__': 
 	parser = argparse.ArgumentParser(description='tprK project. Currently the program expects '
 	 'matched single-end trimmed Illumina and PacBio Q20 reads for the same sample in one big folder.')
-	parser.add_argument('-m', '--metadata_file', required=False,
-		help='Specify name of metadata.csv file containing sample name, illumina, and pacbio files. '
-		'Otherwise, will look for metadata.csv.')
+	# parser.add_argument('-m', '--metadata_file', required=False,
+	# 	help='Specify name of metadata.csv file containing sample name, illumina, and pacbio files. '
+	# 	'Otherwise, will look for metadata.csv.')
 	parser.add_argument('-f', '--relative_freq_filter', required=False,
 		help='Specify by what relative frequency an additional filtered final merged table and visualizations should be sorted at. '
 		'By default, this is set to 0.2.')
@@ -107,13 +107,7 @@ if __name__ == '__main__':
 		sys.exit(1)
 
 	# Setting variables 
-	if args.metadata_file:
-		metadata_file = args.metadata_file
-		print("Metadata file is " + args.metadata_file)
-	else:
-		print("Metadata file not specified. Using metadata.csv.")
-		metadata_file = "metadata.csv"
-
+	metadata_file = "metadata.csv"
 	if args.relative_freq_filter:
 		relative_freq_filter = args.relative_freq_filter
 	else:
