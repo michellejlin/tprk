@@ -48,12 +48,15 @@ if __name__ == '__main__':
 		fig1 = figure(x_range = (0,80), y_range = (0,105), plot_height = 330, plot_width = 540, title = strain, toolbar_location = None)
 	else:
 		fig1 = figure(x_range = (0,80), y_range = (0,105), plot_height = 1000, plot_width = 1600, title = strain, toolbar_location = None)
+	
+	#TODO: Fix 0 on x-axis
 	fig1.xaxis.major_label_overrides = dict(zip([10,20,30,40,50,60,70,80], ["V1", "V2", "V3", "V4", "V5", "V6", "V7",""]))
 	fig1.xaxis.minor_tick_line_color = None
-	fig1.title.text_font_size = "14pt"
-	fig1.xaxis.major_label_text_font_size = '12pt'
-	fig1.yaxis.major_label_text_font_size = '12pt'
+	fig1.title.text_font_size = "18pt"
+	fig1.xaxis.major_label_text_font_size = '16pt'
+	fig1.yaxis.major_label_text_font_size = '16pt'
 	fig1.yaxis.axis_label = "Relative Frequency"
+	fig1.yaxis.axis_label_text_font_size = '18pt'
 
 	blues = brewer['Blues'][9]
 	bugn = brewer['BuGn'][9]
@@ -140,7 +143,7 @@ if __name__ == '__main__':
 			region_counts[6] = region_counts[6] + 1
 
 	for index, total in enumerate(region_totals):
-		label = Label(x = (index + 1) * 10, y = 101, text = str(region_counts[index]) + ", " + str(total), border_line_color = None, text_align = 'center')
+		label = Label(x = (index + 1) * 10, y = 101, text = str(region_counts[index]) + ", " + str(total), border_line_color = None, text_align = 'center', text_font_size = '11pt')
 		fig1.add_layout(label)
 
  
