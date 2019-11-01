@@ -57,18 +57,22 @@ anno_filt <- paste("r^2 =",round(summary(model_filt)$adj.r.squared,3))
 
 # Plots for non-filtered.
 plot <- ggplot(alldata,aes(x=alldata[[illrf_col]],y=alldata[[pbrf_col]],color=Region)) + 
-  geom_point(size=2) + 
+  geom_point(size=1.5) + coord_equal() + 
+  theme(plot.title = element_text(size = 10,vjust=-2,hjust=0.03)) + 
   geom_abline(linetype="dashed",color="grey") + theme_classic() + scale_colour_manual(values=cbbPalette) + ggtitle(sample_name) +
   xlim(0,100) + ylim(0,100) + annotate("text", x=85, y=2, size=3, label=anno, 3) + 
   theme(legend.position = "bottom",legend.box = "horizontal") + theme(legend.key.width = unit(0.1, "cm")) + 
-  xlab(label="Illumina Frequency") + ylab(label="PacBio Frequency") + guides(color = guide_legend(nrow = 1))
+  xlab(label="Illumina Frequency") + ylab(label="PacBio Frequency") + guides(color = guide_legend(nrow = 1)) + 
+  theme(aspect.ratio = 1,axis.title.x = element_text(size=9),axis.title.y = element_text(size=9))
 
 # Plots for filtered.
 plot_filt <- ggplot(alldatafilt,aes(x=alldatafilt[[illrf_col]],y=alldatafilt[[pbrf_col]],color=Region)) + 
-  geom_point(size=2) + ggtitle(paste(sample_name,"Filtered")) + 
+  geom_point(size=1.5) + ggtitle(paste(sample_name,"Filtered")) + coord_equal() + 
+  theme(plot.title = element_text(size = 10,vjust=-2,hjust=0.03)) + 
   geom_abline(linetype="dashed",color="grey") + theme_classic() + scale_colour_manual(values=cbbPalette) + 
   xlim(0,100) + ylim(0,100) + annotate("text", x=85, y=2, size=3, label=anno_filt, 3) + theme(legend.position = "none") + 
-  xlab(label="Illumina Frequency") + ylab(label="PacBio Frequency") 
+  xlab(label="Illumina Frequency") + ylab(label="PacBio Frequency")  + 
+  theme(aspect.ratio = 1,axis.title.x = element_text(size=9),axis.title.y = element_text(size=9))
 
 g_legend<-function(a.gplot){
   tmp <- ggplot_gtable(ggplot_build(a.gplot))
