@@ -21,15 +21,14 @@ filename <- (opt$filename)
 ## path refers to the folder your metadata.csv and sequencing files (.fastq) are.
 ## filename refers to the pre-filtered file (i.e. allreads_filtered.csv) that you want to recalculate frequencies for.
 
-#path <- "/Users/uwvirongs/Documents/Michelle/tprk_pipeline/AS_files"
-#filename <- "allreads_filtered.csv"
+#path <- "/Users/uwvirongs/Documents/Michelle/tprk_pipeline/testing2"
+#filename <- "/Users/uwvirongs/Documents/Michelle/tprk_pipeline/testing2/allreads_filtered.csv"
 
 ## This script can also be run from the command line.
 ## Usage: rscript \path\to\recalculate_frequemcy.R -d [path] -f [file_name]
 
 #####
-
-allreads_filtered <- read.table(opt$filename, sep=',', header=TRUE)
+allreads_filtered <- read.table(filename, sep=',', header=TRUE)
 # Grabs the actual number of samples.
 numsamples <- (length(colnames(allreads_filtered)) - 2) / 4
 metadata <- read.table(paste(path,"/metadata.csv", sep=''), sep=',', header=TRUE)
@@ -51,8 +50,13 @@ sample_names <- c(as.character(metadata$SampleName))
 
 allreads_filtered1 <- allreads_filtered
 
+# Allreads_filtered.csv has both PacBio and Illumina data, so must run through twice.
+if (grepl("allreads_filtered.csv",filename)) {
+  numsamples = numsamples * 2
+}
+
 # Loops through samples and recalculates frequency for each sample (column) for each region.
-for (sample in c(1:numsamples)){
+for (sample in c(1:(numsamples))){
   freqcol <- (sample * 2) + 1
   countcol <- (sample * 2) + 2
   for (region in unique(allreads_filtered1$Region)){
