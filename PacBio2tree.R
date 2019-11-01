@@ -99,6 +99,7 @@ for (i in 1:length(PacBio_fns)) {
 
 allAA_fullORFs_df <- drop_na(removeTruncatedORF(allAA))
 allAAfilt_fullORFs_df <- drop_na(removeTruncatedORF(allAAfilt))
+write.table(allAAfilt_fullORFs_df,"Table_allAAfilt_fullORFs.tsv",sep='\t',row.names=FALSE)
 allAA_fullORFs_BString <- df2BString(allAA_fullORFs_df)
 allAAfilt_fullORFs_BString <- df2BString(allAAfilt_fullORFs_df)
 
@@ -129,17 +130,19 @@ system(fasttree_command)
 
 ##Read in FastTree newick file
 tree <- read.newick(AAtree_outfile_filt)
-mycolors <- colorRampPalette(brewer.pal(name="Dark2", n = 8))(length(sample_names))
+mycolors <- colorRampPalette(brewer.pal(name="Dark2", n = 8))(length(sample_names)+4)
 #consider...
 #tree <- root(tree, which(tree$tip.label == "148B_seq86_220"))
-
+tree <- reorder(tree,"postorder")
+tree <- phangorn::midpoint(tree)
+tree <- reorder(tree)
 ##Expects tip labels to contain the sample name followed by a "_" and will parse the sample name accordingly.
 d2 = data.frame(taxa=tree$tip.label,sample=sapply(strsplit(tree$tip.label,"_"),"[",1),count=as.numeric(sapply(strsplit(tree$tip.label,"_"),"[",3)))
 d2 <- d2 %>% group_by(sample) %>% mutate(percentage=round(count / sum(count)*100,3))
 ggtree <- ggtree(tree) %<+% d2 + geom_tippoint(aes(color=sample,size=percentage),alpha=0.8,) + 
   theme(legend.position = c(0.1,0.85),legend.title = element_blank(),legend.key.width=unit(0.2,"cm"),legend.text=element_text(size=10)) + 
   scale_colour_manual(values=mycolors) + 
-  geom_treescale(x=0.005,y=185,fontsize=3.5,offset=2) + guides(colour = guide_legend(override.aes = list(size=3))) + 
+  geom_treescale(x=0.005,y=150,fontsize=3.5,offset=2) + guides(colour = guide_legend(override.aes = list(size=3))) + 
   scale_size(name="Percentage", breaks=c(0.2,0.5,2,5)) 
 ggsave(path=paste(path,"/Figures",sep=""),filename="PacBio_Tree_Filtered.pdf",height = 6, width=4)
 
