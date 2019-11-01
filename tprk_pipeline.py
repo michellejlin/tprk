@@ -35,14 +35,26 @@ def filter_table(relative_freq_filter, count_filter, table):
 				# Odd indexes should be counts
 				if ((index % 2 == 1)) and index != 0 and index != 1 and part != "NA" and float(part) >= count_filter:
 					count_check = True
+				# For allreads_filtered.csv, we want to change anything under the count filter to NA.
+				if ("allreads" in table) and ((index % 2 == 1)) and index != 0 and part != "NA" and index != 1 and float(part) < count_filter:
+					line_parts[index] = "NA"
+					line_parts[index - 1] = "NA"
+
+			newline = line_parts[0] + "," + line_parts[1]
+			for index, part in enumerate(line_parts):
+				if(index != 0 and index != 1):
+					newline = newline + "," + part
 
 			# Passes the filter if any one of the samples pass both the relative filter and count filter
 			if relative_freq_check and count_check:
-				table_filtered.write(line + "\n")
+				table_filtered.write(newline + "\n")
 			else:
-				table_reads_thrownout.write(line + "\n")
+				table_reads_thrownout.write(newline + "\n")
 
 		line_num = line_num + 1
+	table_filtered.close()
+	sort_command = "sort -t, -k1,1 -k3,3nr < " + table.split(".csv")[0] + "_filtered.csv > a.tmp && mv a.tmp > " + table.split(".csv")[0] + "_filtered.csv"
+	subprocess.call(sort_command, shell=True)
 
 
 # Makes relative frequency plots for each sample by calling syph_visualizer.py.
@@ -68,7 +80,7 @@ def bokeh_freq_plot(script_path, cur_dir, new_dir, relative_freq_filter, count_f
 
 			# Calls visualizer for non-filtered sample.
 			subprocess.call("python " + script_path + "/syph_visualizer.py " + cur_dir + "/" + sample_file + 
-			" -t " + sample_name + " -o " + new_dir, shell=True)
+			" -t " + sample_name + " -o " + new_dir + " " + svg_flag, shell=True)
 
 			# Filters the current final_data.csv.
 			filter_table(relative_freq_filter, count_filter, cur_dir + "/" + sample_file)
@@ -77,7 +89,7 @@ def bokeh_freq_plot(script_path, cur_dir, new_dir, relative_freq_filter, count_f
 				cur_dir + "/" + sample_file.split(".csv")[0] + "_filtered.csv", shell=True)
 			# Calls visualizer for filtered sample.
 			subprocess.call("python " + script_path + "/syph_visualizer.py " + cur_dir + "/" + 
-				sample_file.split(".csv")[0] + "_filtered.csv -t " + sample_name + "_filtered" + " -o " + new_dir, shell=True)
+				sample_file.split(".csv")[0] + "_filtered.csv -t " + sample_name + "_filtered" + " -o " + new_dir + " " + svg_flag, shell=True)
 
 
 if __name__ == '__main__': 
@@ -99,6 +111,8 @@ if __name__ == '__main__':
 		'that there are only PacBio files here. Comparison figures to Illumina will not be created.')
 	parser.add_argument('-illumina', action='store_true', required = False, help='Write this flag to specify '
 		'that there are only Illumina files here. Comparison figures to PacBio will not be created.')
+	parser.add_argument('-svg', action='store_true', required = False, help='Write this flag to specify '
+		'.svg files to be created for relative frequency plots for each sample.')
 
 	try:
 		args = parser.parse_args()
@@ -109,11 +123,11 @@ if __name__ == '__main__':
 	# Setting variables 
 	metadata_file = "metadata.csv"
 	if args.relative_freq_filter:
-		relative_freq_filter = args.relative_freq_filter
+		relative_freq_filter = float(args.relative_freq_filter)
 	else:
 		relative_freq_filter = 0.2
 	if args.count_filter:
-		count_filter = args.count_filter
+		count_filter = int(args.count_filter)
 	else:
 		count_filter = 5
 	if args.pacbio:
@@ -124,6 +138,10 @@ if __name__ == '__main__':
 		illumina_flag = "--illumina"
 	else:
 		illumina_flag = ""
+	if args.svg:
+		svg_flag = "-svg"
+	else:
+		svg_flag = ""
 
 	script_path = os.path.dirname(os.path.realpath(__file__))
 	cwd = os.getcwd()
