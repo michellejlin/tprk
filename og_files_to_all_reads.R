@@ -1,7 +1,3 @@
-##This line must be set up for PacBio file processing!
-##In a typical Mac installation, this path points to the Julia application in the Application folder.
-julia <- julia_setup(JULIA_HOME = "/Applications/Julia-1.2.app/Contents/Resources/julia/bin/")
-
 ##Install packages if haven't already
 list.of.packages <- c("JuliaCall", "reticulate", "devtools", "optparse", "devtools", "dada2", "ggplot2", "ShortRead",
                       "reshape2", "optparse")
@@ -11,6 +7,10 @@ if(length(new.packages)) install.packages(new.packages)
 #   install.packages("BiocManager")
 #   BiocManager::install(c("dada2"))
 suppressMessages(invisible(lapply(list.of.packages,library,character.only=T)))
+
+##This line must be set up for PacBio file processing!
+##In a typical Mac installation, this path points to the Julia application in the Application folder.
+julia <- julia_setup(JULIA_HOME = "/Applications/Julia-1.2.app/Contents/Resources/julia/bin/")
 
 
 ##Specifying Illumina vs. PacBio files, and what the sample name is.
@@ -109,8 +109,9 @@ if(opt$illumina == FALSE) {
       julia_command("Pkg.add(PackageSpec(name=\"NextGenSeqUtils\", rev= \"1.0\", url = \"https://github.com/MurrellGroup/NextGenSeqUtils.jl.git\"))")
       julia_command("Pkg.add(PackageSpec(name=\"DPMeansClustering\", rev=\"1.0\", url = \"https://github.com/MurrellGroup/DPMeansClustering.jl.git\"))")
       julia_command("Pkg.add(PackageSpec(name=\"RobustAmpliconDenoising\", rev=\"1.0\", url = \"https://github.com/MurrellGroup/RobustAmpliconDenoising.jl.git\"))")
+
       julia_command("using RobustAmpliconDenoising")
-      
+  
       julia_readfastq <- paste("seqs, QVs, seq_names = read_fastq(\"",filt[count],'")',sep="")
       julia_command(julia_readfastq)
       julia_command("templates,template_sizes,template_indices = denoise(seqs)")
