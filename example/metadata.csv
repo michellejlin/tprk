@@ -1,0 +1,3 @@
+SampleName,Illumina,PacBio
+148B,148B-tprK_S1029.R1.SEtrimmed.fastq,148B_pacbio_190829_055030.Q20.fastq
+148B2,148B2-tprK_illumina_S1030.R1.SEtrimmed.fastq,148B2-tprK_pacbio_190829_055030.Q20.fastq
