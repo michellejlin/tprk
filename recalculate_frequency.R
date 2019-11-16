@@ -1,7 +1,8 @@
 # Recalculates relative frequency given a pre-filtered file (i.e. allreads_filtered.csv).
 # This step is done in the tprk_pipeline.py. recalculate_frequency.R will replace the file. 
 
-library("optparse")
+suppressMessages(suppressWarnings(require("optparse")))
+suppressMessages(suppressWarnings(require(vegan)))
 
 option_list <- list(make_option(c("-d", "--directory"), type="character", default=NULL, help="Specify working directory", metavar="character"),
                     make_option(c("-f", "--filename"), type="character", default=NULL, help="Specify file to recalculate frequency.", 
@@ -25,7 +26,7 @@ filename <- (opt$filename)
 #filename <- "/Users/uwvirongs/Documents/Michelle/tprk_pipeline/testing2/allreads_filtered.csv"
 
 ## This script can also be run from the command line.
-## Usage: rscript \path\to\recalculate_frequemcy.R -d [path] -f [file_name]
+## Usage: rscript \path\to\recalculate_frequency.R -d [path] -f [file_name]
 
 #####
 allreads_filtered <- read.table(filename, sep=',', header=TRUE)
@@ -71,3 +72,24 @@ for (sample in c(1:(numsamples))){
 
 # Rewrites the file with the newly calculated relative frequencies.
 write.csv(allreads_filtered1,file=filename,row.names=FALSE,quote=FALSE)
+
+# Also makes Amin's requested CSV
+if (grepl("allreads_filtered.csv",filename)) {
+  amin_csv <- t(allreads_filtered1)
+  variable_region_lists <- split(allreads_filtered1, f = allreads_filtered1$Region)
+  for (i in 1:length(variable_region_lists)) {
+    amin_csv <- t(variable_region_lists[[i]])
+    colnames(amin_csv) <- NULL
+    to_remove <- "Region"
+    for (row in 1:nrow(amin_csv)) {
+      row_name <- rownames(amin_csv)[row]
+      if (grepl("_RelativeFreq", row_name)) {
+        to_remove <- c(to_remove, row_name)
+      }
+    }
+    removedamin_csv = amin_csv[ !(row.names(amin_csv) %in% to_remove), ]
+    path <- gsub("[\r\n]", "", path)
+    dir.create(file.path(path, "Diversity"), showWarnings=FALSE)
+    write.table(removedamin_csv,file=paste(path,"/Diversity/V",i,".csv",sep=""), sep=",",quote=FALSE, col.names=FALSE)
+  }
+}
