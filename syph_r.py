@@ -52,11 +52,16 @@ def find_region(sample, input_format, is_pacbio, current_dir):
 
 # Matches a read to a specified string of nucleotides, "primer", with less than 3 errors.
 def fuzzy_match(read_seq, primer):
-	match = regex.findall(primer + "{e<=3}", read_seq)
-	if match:
-		return match[0]
+	# Finds exact match first. 
+	exact_match = regex.search(primer,read_seq)
+	if exact_match:
+		return exact_match[0].rstrip()
+	# If can't find exact match, searches for best match with less than 3 substitutions.
 	else:
-		return False
+		fuzzy_match = regex.search(r"(?b)("+primer + "){s<=3}", read_seq)
+		if fuzzy_match:
+			return fuzzy_match[0]
+
 
 # String matches a read to a variable region (V1-V7).
 def region_seq(read_seq, read_name, sample_name, is_pacbio, current_dir):
@@ -64,11 +69,12 @@ def region_seq(read_seq, read_name, sample_name, is_pacbio, current_dir):
 	variable_regions = {
 		"V1": "ATCAGTAGTAGTCTTAAATCC",
 		"V2": "CCGAACAAAATATCTCC",
-		"V3": "GCCCCGACATCCCATAAGAT",
+		# "V3": "GCCCCGACATCCCATAAGAT", #148B-148B2
+		"V3": "AGCACACAGACCCCAAAGCTT",
 		"V4": "AACAACGCATCTGCGCC",
 		"V5": "CCTTGGTTTCGAGCTT",
 		"V6": "CATACACCGGGAAGTT",
-		"V7": "TACCCCACACTC"
+		"V7": "CGGACTGACCACTACCCCACACTC"
 	}
 
 	# Loops through each variable region and its primer for each read.
@@ -76,8 +82,8 @@ def region_seq(read_seq, read_name, sample_name, is_pacbio, current_dir):
 		# If a read matches the primer with fuzzy matching less than 3 errors, then continue
 		# Also reverses the read and tries that too
 		read_seq_rev = str((Seq(read_seq, generic_dna).reverse_complement()))
-		match_seq = regex.findall(primer + "{e<=3}", read_seq)
-		match_seq_rev = regex.findall(primer + "{e<=3}", read_seq_rev)
+		match_seq = fuzzy_match(read_seq, primer)
+		match_seq_rev = fuzzy_match(read_seq_rev, primer)
 
 		# Illumina reads are read as one read = one count. PacBio reads are assumed to be RAD, and counts are
 		# found after the underscore in the read name.
@@ -94,51 +100,49 @@ def region_seq(read_seq, read_name, sample_name, is_pacbio, current_dir):
 				read_seq = read_seq_rev
 				match_seq = match_seq_rev
 			if (region == "V1"):
-				start = (str.index(read_seq, match_seq[0]) + 21)
+				start = (str.index(read_seq, match_seq) + 21)
 				if fuzzy_match(read_seq, "CCAGGCCAGCTCCGCA"):
 					end = (str.index(read_seq, fuzzy_match(read_seq, "CCAGGCCAGCTCCGCA")))
 					v_list = V1_list
 					v_dna = V1_dna
 			elif (region == "V2"):
-				start = (str.index(read_seq, match_seq[0]) + 17)
+				start = (str.index(read_seq, match_seq) + 17)
 				if fuzzy_match(read_seq, "GTCGGTGTTAGACGCAA"):
 					end = (str.index(read_seq, fuzzy_match(read_seq, "GTCGGTGTTAGACGCAA")))
 					v_list = V2_list
 					v_dna = V2_dna
 			elif (region == "V3"):
-				start = (str.index(read_seq, match_seq[0]) + 20)
+				start = (str.index(read_seq, match_seq) + 20)
 				if fuzzy_match(read_seq, "GGAGTTGCCGGT"):
 					end = (str.index(read_seq, fuzzy_match(read_seq, "GGAGTTGCCGGT")))
 					v_list = V3_list
 					v_dna = V3_dna
 			elif (region == "V4"):
-				start = (str.index(read_seq, match_seq[0]) + 15)
+				start = (str.index(read_seq, match_seq) + 15)
 				if fuzzy_match(read_seq, "AGCAGCCAGAGCACAC"):
 					end = (str.index(read_seq, fuzzy_match(read_seq, "AGCAGCCAGAGCACAC")))
 					v_list = V4_list
 					v_dna = V4_dna
 			elif (region == "V5"):
 				# Find the beginning of the region following the primer
-				start = (str.index(read_seq, match_seq[0]) + 16)
+				start = (str.index(read_seq, match_seq) + 16)
 				# Find the end of the region
 				if fuzzy_match(read_seq, "CGATGCGAAATA"):
 					end = (str.index(read_seq, fuzzy_match(read_seq, "CGATGCGAAATA")))
 					v_list = V5_list
 					v_dna = V5_dna
 			elif (region == "V6"):
-				start = (str.index(read_seq, match_seq[0]) + 16)
+				start = (str.index(read_seq, match_seq) + 16)
 				if fuzzy_match(read_seq, "CATGTACGTACG"):
 					end = (str.index(read_seq, fuzzy_match(read_seq, "CATGTACGTACG")))
 					v_list = V6_list
 					v_dna = V6_dna
 			elif (region == "V7"):
-				start = (str.index(read_seq, match_seq[0]) + 12)
+				start = (str.index(read_seq, match_seq) + 24)
 				if fuzzy_match(read_seq, "CAAGTTTGCATACACTT"):
 					end = (str.index(read_seq, fuzzy_match(read_seq, "CAAGTTTGCATACACTT")))	
 					v_list = V7_list
 					v_dna = V7_dna
-
-
 			if end != 0:
 				# Grabs what we now found as the region
 				region_seq = read_seq[start:end]
