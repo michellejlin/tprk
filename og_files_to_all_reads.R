@@ -34,7 +34,7 @@ script.dir <- opt$script_path
 ## path refers to the folder your metadata.csv and sequencing files (.fastq) are. (This is the -directory option).
 ## script.dir refers to the folder where all the script files are located. This should point to where you saved the cloned GitHub.
 
-#path <- "/Users/uwvirongs/Documents/Michelle/tprk_pipeline/AS_files"
+#path <- "/Users/uwvirongs/Documents/Michelle/tprk_pipeline/AS_files_redo3"
 #script.dir <- "/Users/uwvirongs/Documents/tprK-master/"
 
 ## This script can also be run from the command line.
@@ -128,15 +128,15 @@ if(opt$illumina == FALSE) {
   mkdir_freq <- paste("mkdir ",PacBio_freq_path,sep='')
   # Copies the final PacBio files into the PacBio_frequencies folder. 
   system(mkdir_freq)
-  copyPacBio <- paste("cp ",PacBio_fns,PacBio_freq_path,";")
-  for (num in 1:length(copyPacBio)) {
-    system(copyPacBio[num])
-  }
+  # copyPacBio <- paste("cp ",PacBio_fns,PacBio_freq_path,";")
+  # for (num in 1:length(copyPacBio)) {
+  #   system(copyPacBio[num])
+  # }
   
   # Fixes up the fastas so they wrap and don't have awkward new lines.
   # TODO: fix this section so it works. For some reason the pipeline currently runs without it? But probably should fix this anyway.
   awk_command <- paste("awk '/^>/ {printf(\"\\n%s\\n\",$0);next; } { printf(\"%s\",$0);}  END {printf(\"\\n\");}' < ",RAD_files," > ",RAD_files_nolines," ;")
-  fix_firstline <- paste("tail -n +2 ",RAD_files_nolines," > ",RAD_files_fix_newdir)
+  fix_firstline <- paste("tail -n+2 ",RAD_files_nolines," > ",RAD_files_fix_newdir)
   for (count in c(1:length(awk_command))) {
     system(awk_command[count])
     system(fix_firstline[count])
@@ -157,13 +157,18 @@ if(opt$illumina == FALSE) {
   PacBio_freq_files_fullpath = list.files(PacBio_freq_path,pattern="*_final_data.csv",full.names=T)
   compare_PacBio_df <- data.frame(Region=character(),Read=character())
   
+  sample_names <- sort(sample_names)
+  
   # Renames the columns attaching PB and sample name to relative frequency and count so we can 
   # mash everything together into a big dataframe.
   for (i in 1:length(PacBio_freq_files)) {
     PacBioFreqtitle <- paste("PB_",sample_names[i],"_RelativeFreq",sep='')
     PacBioCounttitle <- paste("PB_",sample_names[i],"_Count",sep='')
-    assign(PacBio_freq_files[i], read.csv(PacBio_freq_files_fullpath[i],col.names = c("Region","Read",PacBioFreqtitle,PacBioCounttitle)))
-    compare_PacBio_df <- merge(compare_PacBio_df,get(PacBio_freq_files[i]),all=TRUE)
+    pacbiodf <- read.csv(PacBio_freq_files_fullpath[i],col.names = c("Region","Read",PacBioFreqtitle,PacBioCounttitle),check.names = FALSE)
+    pacbiodf <- pacbiodf[order(pacbiodf$Region,-pacbiodf[[PacBioFreqtitle]]),][]
+    compare_PacBio_df <- merge(compare_PacBio_df,pacbiodf,all=TRUE)
+    # assign(PacBio_freq_files[i], read.csv(PacBio_freq_files_fullpath[i],col.names = c("Region","Read",PacBioFreqtitle,PacBioCounttitle)))
+    # compare_PacBio_df <- merge(compare_PacBio_df,get(PacBio_freq_files[i]),all=TRUE)
   } 
 } else {
   print("Illumina option specified. Skipping making PacBio frequency files...")
