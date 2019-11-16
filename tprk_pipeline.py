@@ -53,7 +53,7 @@ def filter_table(relative_freq_filter, count_filter, table):
 
 		line_num = line_num + 1
 	table_filtered.close()
-	sort_command = "sort -t, -k1,1 -k3,3nr < " + table.split(".csv")[0] + "_filtered.csv > a.tmp && mv a.tmp > " + table.split(".csv")[0] + "_filtered.csv"
+	sort_command = "sort -t, -k1,1 -k3,3nr < " + table.split(".csv")[0] + "_filtered.csv > a.tmp && mv a.tmp " + table.split(".csv")[0] + "_filtered.csv"
 	subprocess.call(sort_command, shell=True)
 
 
@@ -87,6 +87,7 @@ def bokeh_freq_plot(script_path, cur_dir, new_dir, relative_freq_filter, count_f
 			# Recalculates new relative frequencies now that it's filtered.
 			subprocess.call("rscript " + script_path + "/recalculate_frequency.R -d " + cwd + " -f " + 
 				cur_dir + "/" + sample_file.split(".csv")[0] + "_filtered.csv", shell=True)
+
 			# Calls visualizer for filtered sample.
 			subprocess.call("python " + script_path + "/syph_visualizer.py " + cur_dir + "/" + 
 				sample_file.split(".csv")[0] + "_filtered.csv -t " + sample_name + "_filtered" + " -o " + new_dir + " " + svg_flag, shell=True)
