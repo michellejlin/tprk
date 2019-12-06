@@ -57,6 +57,7 @@ Put the following things in one folder:
 - **Metadata file.** This should be a .csv with three columns: SampleName, PacBio, Illumina, shown in the table below.
     - This file should be called metadata.csv and placed in the same folder as your files to be analyzed.
     - There MUST be a newline character at the end of this file to be read as a valid csv. Simply hit enter in the last row to ensure there is a valid new line.
+    - If running just Illumina or just PacBio, simply leave those columns blank (but make sure to have commas as appropriate).
     - An example metadata file is provided. The general format of the metadata file should be three columns, separated by commas, as shown:
 
 | SampleName  | Illumina  | PacBio |
@@ -81,6 +82,9 @@ Running just PacBio files, filtering for relative frequency > 0.5 and count > 10
 
 `tprk_pipeline.py -f 0.5 -c 10 -pacbio`
 
+Running both PacBio and Illumina, filtering by just count > 5 (Remember, the defaults are set to 0.2 and 5 for relative frequency and count respectively!):
+
+`tprk_pipeline.py -f 0`
 
 ## Arguments
 | Command | Description |
