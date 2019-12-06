@@ -7,6 +7,7 @@ This pipeline was designed to take Illumina and PacBio files straight off the se
 * [Usage](#Usage)
 * [Arguments](#Arguments)
 * [Running Parts Separately](#Running-Parts-Separately)
+* [Common Errors](#Common-Errors)
 
 ## Setup
 **Installs**
@@ -80,9 +81,6 @@ Running just PacBio files, filtering for relative frequency > 0.5 and count > 10
 
 `tprk_pipeline.py -f 0.5 -c 10 -pacbio`
 
-Filtering PacBio files with Illumina reads:
-
-`tprk_pipeline.py --illumina_filter`
 
 ## Arguments
 | Command | Description |
@@ -101,3 +99,7 @@ In general, this information will be located near the top of each individual fil
 `rscript PacBio2Tree.R -d [directory]`
 
 OR run the script in R, and change the indicated variables (in this case, the path variable in line 18).
+
+## Common Errors
+1. `incomplete final line found by readTableHeader on '/Users/uwvirongs/Documents/tprk/metadata.csv'`
+   Make sure your metadata file has a new line at the end. You can do this by simply pressing enter on the last line of your file and saving. 
