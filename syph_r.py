@@ -101,46 +101,46 @@ def region_seq(read_seq, read_name, sample_name, is_pacbio, current_dir):
 				match_seq = match_seq_rev
 			if (region == "V1"):
 				start = (str.index(read_seq, match_seq) + 21)
-				if fuzzy_match(read_seq, "CCAGGCCAGCTCCGCA"):
-					end = (str.index(read_seq, fuzzy_match(read_seq, "CCAGGCCAGCTCCGCA")))
+				if fuzzy_match(read_seq, "CCAGGCCAGCTCCGCATA"):
+					end = (str.index(read_seq, fuzzy_match(read_seq, "CCAGGCCAGCTCCGCATA")))
 					v_list = V1_list
 					v_dna = V1_dna
 			elif (region == "V2"):
 				start = (str.index(read_seq, match_seq) + 17)
-				if fuzzy_match(read_seq, "GTCGGTGTTAGACGCAA"):
-					end = (str.index(read_seq, fuzzy_match(read_seq, "GTCGGTGTTAGACGCAA")))
+				if fuzzy_match(read_seq, "GTCGGTGTTAGACGCAAA"):
+					end = (str.index(read_seq, fuzzy_match(read_seq, "GTCGGTGTTAGACGCAAA")))
 					v_list = V2_list
 					v_dna = V2_dna
 			elif (region == "V3"):
 				start = (str.index(read_seq, match_seq) + 20)
-				if fuzzy_match(read_seq, "GGAGTTGCCGGT"):
-					end = (str.index(read_seq, fuzzy_match(read_seq, "GGAGTTGCCGGT")))
+				if fuzzy_match(read_seq, "GGAGTTGCCGGTGAGCTC"):
+					end = (str.index(read_seq, fuzzy_match(read_seq, "GGAGTTGCCGGTGAGCTC")))
 					v_list = V3_list
 					v_dna = V3_dna
 			elif (region == "V4"):
 				start = (str.index(read_seq, match_seq) + 15)
-				if fuzzy_match(read_seq, "AGCAGCCAGAGCACAC"):
-					end = (str.index(read_seq, fuzzy_match(read_seq, "AGCAGCCAGAGCACAC")))
+				if fuzzy_match(read_seq, "AGCAGCCAGAGCACACA"):
+					end = (str.index(read_seq, fuzzy_match(read_seq, "AGCAGCCAGAGCACACA")))
 					v_list = V4_list
 					v_dna = V4_dna
 			elif (region == "V5"):
 				# Find the beginning of the region following the primer
 				start = (str.index(read_seq, match_seq) + 16)
 				# Find the end of the region
-				if fuzzy_match(read_seq, "CGATGCGAAATA"):
-					end = (str.index(read_seq, fuzzy_match(read_seq, "CGATGCGAAATA")))
+				if fuzzy_match(read_seq, "CGATGCGAAATATCCTCC"):
+					end = (str.index(read_seq, fuzzy_match(read_seq, "CGATGCGAAATATCCTCC")))
 					v_list = V5_list
 					v_dna = V5_dna
 			elif (region == "V6"):
 				start = (str.index(read_seq, match_seq) + 16)
-				if fuzzy_match(read_seq, "CATGTACGTACG"):
-					end = (str.index(read_seq, fuzzy_match(read_seq, "CATGTACGTACG")))
+				if fuzzy_match(read_seq, "CATGTACGTACGCACATC"):
+					end = (str.index(read_seq, fuzzy_match(read_seq, "CATGTACGTACGCACATC")))
 					v_list = V6_list
 					v_dna = V6_dna
 			elif (region == "V7"):
 				start = (str.index(read_seq, match_seq) + 24)
-				if fuzzy_match(read_seq, "CAAGTTTGCATACACTT"):
-					end = (str.index(read_seq, fuzzy_match(read_seq, "CAAGTTTGCATACACTT")))	
+				if fuzzy_match(read_seq, "CAAGTTTGCATACACTTT"):
+					end = (str.index(read_seq, fuzzy_match(read_seq, "CAAGTTTGCATACACTTT")))	
 					v_list = V7_list
 					v_dna = V7_dna
 			if end != 0:
