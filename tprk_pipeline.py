@@ -213,6 +213,10 @@ if __name__ == '__main__':
 		print("Generating variable region comparison plots...")
 		subprocess.call("rscript " + script_path + "/Variable_region_compare.R -p " + cwd, shell=True)
 
+	# Creates heatmap and combined relative frequency plots off filtered all data (allreads_filtered.csv).
+		print("Generating all data heatmap and relative frequency plots...")
+		subprocess.call("python " + script_path + "/alldata_visualizer.py allreads_filtered.csv metadata.csv",shell=True)
+
 	# Creates a tree based off the filtered cumulative data (alldata_filtered.csv). 
 	# Currently no rooting takes place (until somebody figures out how to automate that).
 	# Currently this uses PacBio data.
