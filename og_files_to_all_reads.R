@@ -106,6 +106,7 @@ if(opt$illumina == FALSE) {
     } else{
       print("Setting up Julia...")
       julia_command("using Pkg")
+      julia_command("Pkg.build(\"SpecialFunctions\")")
       julia_command("Pkg.add(PackageSpec(name=\"NextGenSeqUtils\", rev= \"1.0\", url = \"https://github.com/MurrellGroup/NextGenSeqUtils.jl.git\"))")
       julia_command("Pkg.add(PackageSpec(name=\"DPMeansClustering\", rev=\"1.0\", url = \"https://github.com/MurrellGroup/DPMeansClustering.jl.git\"))")
       julia_command("Pkg.add(PackageSpec(name=\"RobustAmpliconDenoising\", rev=\"1.0\", url = \"https://github.com/MurrellGroup/RobustAmpliconDenoising.jl.git\"))")
@@ -128,10 +129,10 @@ if(opt$illumina == FALSE) {
   mkdir_freq <- paste("mkdir ",PacBio_freq_path,sep='')
   # Copies the final PacBio files into the PacBio_frequencies folder. 
   system(mkdir_freq)
-  # copyPacBio <- paste("cp ",PacBio_fns,PacBio_freq_path,";")
-  # for (num in 1:length(copyPacBio)) {
-  #   system(copyPacBio[num])
-  # }
+  copyPacBio <- paste("cp ",PacBio_fns,PacBio_freq_path,";")
+  for (num in 1:length(copyPacBio)) {
+    system(copyPacBio[num])
+  }
   
   # Fixes up the fastas so they wrap and don't have awkward new lines.
   # TODO: fix this section so it works. For some reason the pipeline currently runs without it? But probably should fix this anyway.
