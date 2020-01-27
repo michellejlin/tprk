@@ -28,14 +28,13 @@ sample_name <- opt$sample_name
 ## sample_name refers to the sample you're currently working with for nicer-looking graphs. Make sure this name matches 
 ## what was used in the allreads.csv (i.e. The sample name must be AS10 if PB_AS10_RelativeFreq is the column.)
 
-#path <- "/Users/uwvirongs/Documents/Michelle/tprk_pipeline/AS_files"
+#path <- "/Users/uwvirongs/Documents/Michelle/tprk_pipeline/paper2_redo/pacbio_v_illumina/"
 #sample_name <- "AS10"
 
 ## This script can also be run from the command line. 
 ## Usage: rscript \path\to\Pacbio_v_Illumina_plots.R -p [path] -s [sample_name]
 
 #####
-
 allreads <- paste(path,"/allreads.csv", sep="")
 allreads_filtered <- paste(path,"/allreads_filtered.csv", sep="")
 
@@ -53,6 +52,7 @@ vs_relative_freq_filt <- select(alldatafilt,Region,Read,illrf_col, pbrf_col)
 model <- lm(alldata[[pbrf_col]] ~ alldata[[illrf_col]])
 anno <- paste("r^2 =",round(summary(model)$adj.r.squared,3))
 model_filt <- lm(alldatafilt[[pbrf_col]] ~ alldatafilt[[illrf_col]])
+summary(model_filt)
 anno_filt <- paste("r^2 =",round(summary(model_filt)$adj.r.squared,3))
 
 # Plots for non-filtered.
@@ -66,13 +66,19 @@ plot <- ggplot(alldata,aes(x=alldata[[illrf_col]],y=alldata[[pbrf_col]],color=Re
   theme(aspect.ratio = 1,axis.title.x = element_text(size=9),axis.title.y = element_text(size=9))
 
 # Plots for filtered.
-plot_filt <- ggplot(alldatafilt,aes(x=alldatafilt[[illrf_col]],y=alldatafilt[[pbrf_col]],color=Region)) + 
+plot_filt <- ggplot(alldatafilt,aes(x=alldatafilt[[illrf_col]],y=alldatafilt[[pbrf_col]],color=Region)) +
+  geom_abline(slope = model_filt$coefficients[2], intercept = model_filt$coefficients[1], col = "slategray1",
+              linetype = "solid") + 
   geom_point(size=1.5) + ggtitle(paste(sample_name,"Filtered")) + coord_equal() + 
   theme(plot.title = element_text(size = 10,vjust=-2,hjust=0.03)) + 
   geom_abline(linetype="dashed",color="grey") + theme_classic() + scale_colour_manual(values=cbbPalette) + 
-  xlim(0,100) + ylim(0,100) + annotate("text", x=85, y=2, size=3, label=anno_filt, 3) + theme(legend.position = "none") + 
+  xlim(0,100) + ylim(0,100) + annotate("text", x=80, y=2, size=3, label=anno_filt, 3) + theme(legend.position = "none") + 
   xlab(label="Illumina Frequency") + ylab(label="PacBio Frequency")  + 
+  annotate("text", x=80, y=10, size=3, label=paste("slope = ",round(model_filt$coefficients[2],3),sep=""), 3) + 
+  annotate("text", x=80, y=18, size=3, label=paste("intercept = ",round(model_filt$coefficients[1],3),sep=""), 3) + 
   theme(aspect.ratio = 1,axis.title.x = element_text(size=9),axis.title.y = element_text(size=9))
+
+ggsave(paste(sample_name,"Illumina_vs_PacBio_r.pdf",sep="_"),path="Figures",plot=plot_filt,width=6,height=3,units="in")
 
 g_legend<-function(a.gplot){
   tmp <- ggplot_gtable(ggplot_build(a.gplot))
