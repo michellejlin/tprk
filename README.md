@@ -90,8 +90,8 @@ Running both PacBio and Illumina, filtering by just count > 5 (Remember, the def
 | Command | Description |
 | --- | --- |
 | `-f`, `--relative_freq_filter` | Specify by what relative frequency an additional filtered final merged table and visualizations should be sorted at. By default, this is set to 0.2. |
-| `-c`, `--count_filter` | Specify by what count an additional filtered final merged table and visualizations should be sorted at. By default, this is set to 5. |
-| `-i`, `--illumina_filter` | Specify if PacBio reads should only include Illumina-supported reads that pass the filters given. By default, relative freq is set to 0.2 and count is set to 5. |
+| `-c`, `--count_filter` | Specify by what count an additional filtered final merged table and visualizations should be sorted at. By default, this is set to 10. |
+| `-i`, `--illumina_filter` | Specify if PacBio reads should only include Illumina-supported reads that pass the filters given. By default, relative freq is set to 0.2 and count is set to 10. |
 | `-pacbio` | Write this flag to specify that there are only PacBio files here. Comparison figures to Illumina will not be created. | 
 | `-illumina` | Write this flag to specify that there are only Illumina files here. Comparison figures to PacBio will not be created. | 
 
