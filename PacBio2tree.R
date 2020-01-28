@@ -2,27 +2,28 @@
 # all the final fastas to generate the tree. 
 # Currently this script does not root (until I figure out a way to automatically do that?)
 
+
 if (!requireNamespace("BiocManager", quietly = TRUE)){
   install.packages("BiocManager") }
 BiocManager::install("treeio")
 
 list.of.packages <- c("treeio","ggtree","stringr","Biostrings","phylobase","pegas","tidyverse","lubridate","ape",
-                      "phytools","plyr","phangorn","RColorBrewer","dplyr","optparse")
+                      "phytools","plyr","phangorn","RColorBrewer","dplyr","optparse","data.table")
 suppressMessages(invisible(lapply(list.of.packages,library,character.only=T)))
 
 option_list <- list(make_option(c("-d", "--directory"), type="character", default=NULL, help="Specify working directory", metavar="character"));
 opt_parser <- OptionParser(option_list=option_list);
 opt <- parse_args(opt_parser)
 
-path <- opt$directory
-
+#path <- opt$directory
+path <- "/Volumes/AndeanBear/tprK_patients/sra_tprk/"
 #####
 
 ## To run this script manually in R, uncomment the following lines. You do not need to change the preceding lines of path and script.dir,
 ## but remember to recomment the lines if you want to run the script automatically in the pipeline.
 ## path refers to the folder your metadata.csv and sequencing files (.fastq) are.
 
-#path <- "/Users/uwvirongs/Documents/Michelle/tprk_pipeline/testing2"
+#path <- "/Users/uwvirongs/Documents/Michelle/tprk_pipeline/AS_files_redo"
 
 ## This script can also be run from the command line.
 ## Usage: rscript \path\to\PacBio2tree.R -d [directory]
@@ -52,12 +53,37 @@ df2BString=function(df){
   return(BString)
 }
 
+
 ## Function to remove translated ORFs with stop codons
 removeTruncatedORF=function(AAFile){
   AAFile[,2] <- as.character(AAFile[,2])
   for (num in c(1:length(AAFile[,2]))){
     if (!(regexpr("\\*", AAFile[num,2]) == nchar(AAFile[num,2]))){
       AAFile[num,] <- NA}
+  }
+  return(AAFile)
+}
+
+## Function to remove translated ORFs with stop codons
+removeFrameShift=function(AAFile){
+  conserved <- c("HGFKTTTDFKIVFPIVAKKD",
+                 "RTREDGVQEYIKVELTGNST",
+                 "VGAKVSMKLWGLCALAATDV",
+                "ADALLTLGYRWFSAGGYFAS",
+                 "LETKGSDPDTSFLEGLDLGV",
+                 "YFPVYGKVWGSYRHDMGEYG",
+                 "WEQGKLQENSNVVIEKNVTE")
+  AAFile[,2] <- as.character(AAFile[,2])
+  for (num in c(1:length(AAFile[,2]))){
+      frameShift <- FALSE
+      for (i in c(1:length(conserved))){
+        if (agrepl(conserved[i],AAFile[num,2],max.distance=3,ignore.case=TRUE) == 0){
+          frameShift <- TRUE
+        }
+      }
+      if (frameShift){
+        AAFile[num,] <- NA
+      }
   }
   return(AAFile)
 }
@@ -76,14 +102,21 @@ for (i in 1:length(PacBio_fns)) {
   names(fastafile) <- paste(sample_names[i],"_",names(fastafile),sep="")
   fasta_files <- c(fasta_files,fastafile)
   df_list <- c(df_list,BString2df(fastafile))
-  amino_acids <- translate(fastafile, getGeneticCode("11"), no.init.codon=FALSE,
+  amino_acids <- Biostrings::translate(fastafile, getGeneticCode("11"), no.init.codon=FALSE,
                            if.fuzzy.codon="error")
   aa_list <- c(aa_list, amino_acids)
   df_aa <- BString2df(amino_acids)
   
-  ##Filter frequency
   df_aa <- mutate(df_aa,sample=sapply(strsplit(as.character(names),"_"),"[",1),
-                       count=as.numeric(sapply(strsplit(as.character(names),"_"),"[",3)))
+                  count=as.numeric(sapply(strsplit(as.character(names),"_"),"[",3)))
+  
+  ##Combine same TprKs
+  df_aa <- data.table(df_aa)
+  df_aa <- df_aa[order(-df_aa$count),]
+  df_aa <- df_aa[,list(names,sample,count=sum(count)),by='sequences']
+  df_aa <- df_aa[!duplicated(df_aa$sequences),]
+  df_aa$names <- paste(df_aa$sample,sapply(strsplit(as.character(df_aa$names), split="_"), "[", 2),df_aa$count,sep="_")
+  df_aa <- df_aa[,c(2,1,3,4)]
   df_aa <- mutate(df_aa,percentage=round(count / sum(count)*100,3))
   df_aa_filt <- filter(df_aa,percentage>=0.20)
   df_aa_list[[i]] <- df_aa
@@ -97,8 +130,17 @@ for (i in 1:length(PacBio_fns)) {
   }
 }
 
+## Remove TprKs that are not complete ORFs
 allAA_fullORFs_df <- drop_na(removeTruncatedORF(allAA))
 allAAfilt_fullORFs_df <- drop_na(removeTruncatedORF(allAAfilt))
+
+## Remove TprKs that have two frameshifts that put them 
+allAA_fullORFs_df <- drop_na(removeFrameShift(allAA_fullORFs_df))
+allAAfilt_fullORFs_df <- drop_na(removeFrameShift(allAAfilt_fullORFs_df))
+
+allAAfilt_fullORFs_df[which(duplicated(allAAfilt_fullORFs_df$sequences) == TRUE),]
+
+
 write.table(allAAfilt_fullORFs_df,"Table_allAAfilt_fullORFs.tsv",sep='\t',row.names=FALSE)
 allAA_fullORFs_BString <- df2BString(allAA_fullORFs_df)
 allAAfilt_fullORFs_BString <- df2BString(allAAfilt_fullORFs_df)
@@ -130,21 +172,30 @@ system(fasttree_command)
 
 ##Read in FastTree newick file
 tree <- read.newick(AAtree_outfile_filt)
-mycolors <- colorRampPalette(brewer.pal(name="Dark2", n = 8))(length(sample_names)+4)
-#consider...
-#tree <- root(tree, which(tree$tip.label == "148B_seq86_220"))
+mycolors <- colorRampPalette(brewer.pal(name="Accent", n = 8))(length(sample_names))
+# mycolors <- colorRampPalette(brewer.pal(name="Dark2", n = 8))(length(sample_names)+4)
+
 tree <- reorder(tree,"postorder")
-tree <- phangorn::midpoint(tree)
+#tree <- phangorn::midpoint(tree)
+tree <- root(tree, which(tree$tip.label == "148B_seqs86_220"))
 tree <- reorder(tree)
+
 ##Expects tip labels to contain the sample name followed by a "_" and will parse the sample name accordingly.
 d2 = data.frame(taxa=tree$tip.label,sample=sapply(strsplit(tree$tip.label,"_"),"[",1),count=as.numeric(sapply(strsplit(tree$tip.label,"_"),"[",3)))
-d2 <- d2 %>% group_by(sample) %>% mutate(percentage=round(count / sum(count)*100,3))
-ggtree <- ggtree(tree) %<+% d2 + geom_tippoint(aes(color=sample,size=percentage),alpha=0.8,) + 
-  theme(legend.position = c(0.1,0.85),legend.title = element_blank(),legend.key.width=unit(0.2,"cm"),legend.text=element_text(size=10)) + 
+setDT(d2)[, percentage := round((count/sum(count))*100,3), by = sample]
+
+ggtree <- ggtree(tree) %<+% d2 + geom_tippoint(aes(color=sample,size=percentage),alpha=0.8) + 
+  theme(legend.position = "right",legend.title = element_blank(),legend.key.width=unit(0.2,"cm"),legend.text=element_text(size=10)) + 
   scale_colour_manual(values=mycolors) + 
-  geom_treescale(x=0.005,y=150,fontsize=3.5,offset=2) + guides(colour = guide_legend(override.aes = list(size=3))) + 
-  scale_size(name="Percentage", breaks=c(0.2,0.5,2,5)) 
-ggsave(path=paste(path,"/Figures",sep=""),filename="PacBio_Tree_Filtered.pdf",height = 6, width=4)
+  geom_treescale(x=0.001,y=600,fontsize=3,offset=3) + guides(colour = guide_legend(override.aes = list(size=3))) + 
+  scale_size(name="Percentage", breaks=c(0.5,2,10,40)) 
+
+# ggtree <- ggtree(tree) %<+% d2 + geom_tippoint(aes(color=sample,size=percentage),alpha=0.8,) + 
+#   theme(legend.position = c(0.1,0.85),legend.title = element_blank(),legend.key.width=unit(0.2,"cm"),legend.text=element_text(size=10)) + 
+#   scale_colour_manual(values=mycolors) + 
+#   geom_treescale(x=0.005,y=150,fontsize=3.5,offset=2) + guides(colour = guide_legend(override.aes = list(size=3))) + 
+#   scale_size(name="Percentage", breaks=c(0.2,0.5,2,5)) 
+ggsave(path=paste(path,"/Figures",sep=""),filename="PacBio_Tree_Filtered3.pdf",height = 6, width=4)
 
 
 # ggtree(tree) %<+% d2 + geom_tippoint(aes(color=sample,size=count),alpha=0.8) + 
