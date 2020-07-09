@@ -1,0 +1,69 @@
+metadata_pacbio.csv
+[[1]]
+[1] TRUE
+
+[[2]]
+[1] TRUE
+
+[[3]]
+[1] FALSE
+
+[[4]]
+[1] TRUE
+
+[[5]]
+[1] FALSE
+
+[[6]]
+[1] TRUE
+
+[[7]]
+[1] FALSE
+
+[[8]]
+[1] TRUE
+
+[[9]]
+[1] TRUE
+
+Using PKG_CFLAGS=
+Using PKG_LIBS=-lcurl
+------------------------- ANTICONF ERROR ---------------------------
+Configuration failed because libcurl was not found. Try installing:
+ * deb: libcurl4-openssl-dev (Debian, Ubuntu, etc)
+ * rpm: libcurl-devel (Fedora, CentOS, RHEL)
+ * csw: libcurl_dev (Solaris)
+If libcurl is already installed, check that 'pkg-config' is in your
+PATH and PKG_CONFIG_PATH contains a libcurl.pc file. If pkg-config
+is unavailable you can set INCLUDE_DIR and LIB_DIR manually via:
+R CMD INSTALL --configure-vars='INCLUDE_DIR=... LIB_DIR=...'
+--------------------------------------------------------------------
+Using PKG_CFLAGS=
+--------------------------- [ANTICONF] --------------------------------
+Configuration failed because openssl was not found. Try installing:
+ * deb: libssl-dev (Debian, Ubuntu, etc)
+ * rpm: openssl-devel (Fedora, CentOS, RHEL)
+ * csw: libssl_dev (Solaris)
+ * brew: openssl@1.1 (Mac OSX)
+If openssl is already installed, check that 'pkg-config' is in your
+PATH and PKG_CONFIG_PATH contains a openssl.pc file. If pkg-config
+is unavailable you can set INCLUDE_DIR and LIB_DIR manually via:
+R CMD INSTALL --configure-vars='INCLUDE_DIR=... LIB_DIR=...'
+-------------------------- [ERROR MESSAGE] ---------------------------
+tools/version.c:1:10: fatal error: openssl/opensslv.h: No such file or directory
+ #include <openssl/opensslv.h>
+          ^~~~~~~~~~~~~~~~~~~~
+compilation terminated.
+--------------------------------------------------------------------
+Using PKG_CFLAGS=
+Using PKG_LIBS=-lxml2
+------------------------- ANTICONF ERROR ---------------------------
+Configuration failed because libxml-2.0 was not found. Try installing:
+ * deb: libxml2-dev (Debian, Ubuntu, etc)
+ * rpm: libxml2-devel (Fedora, CentOS, RHEL)
+ * csw: libxml2_dev (Solaris)
+If libxml-2.0 is already installed, check that 'pkg-config' is in your
+PATH and PKG_CONFIG_PATH contains a libxml-2.0.pc file. If pkg-config
+is unavailable you can set INCLUDE_DIR and LIB_DIR manually via:
+R CMD INSTALL --configure-vars='INCLUDE_DIR=... LIB_DIR=...'
+--------------------------------------------------------------------

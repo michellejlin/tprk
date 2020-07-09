@@ -1,0 +1,79 @@
+metadata_pacbio.csv
+[[1]]
+[1] TRUE
+
+[[2]]
+[1] TRUE
+
+[[3]]
+[1] FALSE
+
+[[4]]
+[1] TRUE
+
+[[5]]
+[1] FALSE
+
+[[6]]
+[1] FALSE
+
+[[7]]
+[1] TRUE
+
+[[8]]
+[1] FALSE
+
+[[9]]
+[1] TRUE
+
+[[10]]
+[1] TRUE
+
+cd "htslib-1.7" && make -f "/usr/lib/R/etc/Makeconf" -f "Makefile.Rhtslib"
+make[1]: Entering directory '/tmp/Rtmp7Pa6K9/R.INSTALL2665b49b54/Rhtslib/src/htslib-1.7'
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o kfunc.o kfunc.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o knetfile.o knetfile.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o kstring.o kstring.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o bcf_sr_sort.o bcf_sr_sort.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o bgzf.o bgzf.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o errmod.o errmod.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o faidx.o faidx.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o hfile.o hfile.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o hfile_net.o hfile_net.c
+echo '#define HTS_VERSION "1.7"' > version.h
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o hts.o hts.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o hts_os.o hts_os.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o md5.o md5.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o multipart.o multipart.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o probaln.o probaln.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o realn.o realn.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o regidx.o regidx.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o sam.o sam.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o synced_bcf_reader.o synced_bcf_reader.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o vcf_sweep.o vcf_sweep.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o tbx.o tbx.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o textutils.o textutils.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o thread_pool.o thread_pool.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o vcf.o vcf.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o vcfutils.o vcfutils.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o cram/cram_codecs.o cram/cram_codecs.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o cram/cram_decode.o cram/cram_decode.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o cram/cram_encode.o cram/cram_encode.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o cram/cram_external.o cram/cram_external.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o cram/cram_index.o cram/cram_index.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o cram/cram_io.o cram/cram_io.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o cram/cram_samtools.o cram/cram_samtools.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o cram/cram_stats.o cram/cram_stats.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o cram/files.o cram/files.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o cram/mFILE.o cram/mFILE.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o cram/open_trace_file.o cram/open_trace_file.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o cram/pooled_alloc.o cram/pooled_alloc.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o cram/rANS_static.o cram/rANS_static.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o cram/sam_header.o cram/sam_header.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o cram/string_alloc.o cram/string_alloc.c
+gcc -std=gnu99 -g -O2 -fdebug-prefix-map=/build/r-base-V28x5H/r-base-3.6.3=. -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g  -fpic -I.  -D_FILE_OFFSET_BITS=64 -c -o hfile_libcurl.o hfile_libcurl.c
+Makefile.Rhtslib:128: recipe for target 'hfile_libcurl.o' failed
+make[1]: Leaving directory '/tmp/Rtmp7Pa6K9/R.INSTALL2665b49b54/Rhtslib/src/htslib-1.7'
+Makevars.common:24: recipe for target 'htslib' failed
+checking for curl-config... no
+Cannot find curl-config

@@ -1,0 +1,52 @@
+metadata_pacbio.csv
+Loading required package: JuliaCall
+Loading required package: reticulate
+Loading required package: devtools
+Loading required package: optparse
+Loading required package: devtools
+Loading required package: dada2
+Loading required package: ggplot2
+Loading required package: ShortRead
+Loading required package: reshape2
+[[1]]
+[1] TRUE
+
+[[2]]
+[1] TRUE
+
+[[3]]
+[1] FALSE
+
+[[4]]
+[1] TRUE
+
+[[5]]
+[1] FALSE
+
+[[6]]
+[1] FALSE
+
+[[7]]
+[1] TRUE
+
+[[8]]
+[1] FALSE
+
+[[9]]
+[1] TRUE
+
+[[10]]
+[1] TRUE
+
+Warning messages:
+1: In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
+  there is no package called ‘devtools’
+2: In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
+  there is no package called ‘devtools’
+3: In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
+  there is no package called ‘dada2’
+4: In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
+  there is no package called ‘ShortRead’
+Error in loadNamespace(name) : there is no package called ‘devtools’
+Calls: :: ... loadNamespace -> withRestarts -> withOneRestart -> doWithOneRestart
+Execution halted

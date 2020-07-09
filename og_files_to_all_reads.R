@@ -1,22 +1,20 @@
-##Install packages if haven't already
-list.of.packages <- c("JuliaCall", "reticulate", "devtools", "optparse", "devtools", "dada2", "ggplot2", "ShortRead",
+## Load packages
+list.of.packages <- c("JuliaCall", "reticulate", "devtools", "optparse", "dada2", "ggplot2", "ShortRead",
                       "reshape2", "optparse")
-new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-if(length(new.packages)) install.packages(new.packages)
-# if (!requireNamespace("BiocManager", quietly = TRUE))
-#   install.packages("BiocManager")
-#   BiocManager::install(c("dada2"))
-suppressMessages(invisible(lapply(list.of.packages,library,character.only=T)))
+lapply(list.of.packages,require,character.only = TRUE)
+install.packages("devtools")
+library("devtools")
+devtools::install_github("benjjneb/dada2",ref="1.12.1")
+library("dada2")
 
-##This line must be set up for PacBio file processing!
-##In a typical Mac installation, this path points to the Julia application in the Application folder.
-julia <- julia_setup(JULIA_HOME = "/Applications/Julia-1.2.app/Contents/Resources/julia/bin/")
-
+## Points to Julia install in docker "quay.io/greninger-lab/tprk"
+julia <- julia_setup(JULIA_HOME = "/usr/local/julia/bin")
 
 ##Specifying Illumina vs. PacBio files, and what the sample name is.
 option_list <- list(make_option(c("-s", "--script_path"), type="character", default=NULL, help="Directory where scripts are located.", 
                                 metavar="character"),
                     make_option(c("-d", "--directory"), type="character", default=NULL, help="Specify working directory", metavar="character"),
+                    make_option(c("-m", "--metadata"), type="character", default=NULL, help="Specify metadata", metavar="character"),
                     make_option(c("-p", "--pacbio"), type="character", default=FALSE, help="Specify if these files are only PacBio.", 
                                 metavar="character", action="store_true"),
                     make_option(c("-i", "--illumina"), type="character", default=FALSE, help="Specify if these files are only Illumina.", 
@@ -42,8 +40,7 @@ script.dir <- opt$script_path
 
 #####
 
-metadata <- read.table(paste(path,"/metadata.csv", sep=''), sep=',', header=TRUE)
-setwd(path)
+metadata <- read.table(opt$metadata, sep=',', header=TRUE)
 PacBio_fns <- c(as.character(metadata$PacBio))
 Illumina_fns <- c(as.character(metadata$Illumina))
 sample_names <- c(as.character(metadata$SampleName))
@@ -54,7 +51,7 @@ tprKF <- "GGAAAGAAAAGAACCATACATCC"
 tprKR <- "CGCAGTTCCGGATTCTGA"
 rc <- dada2:::rc
 noprimer_filenames <- paste(substr(basename(PacBio_fns),1,nchar(basename(PacBio_fns))-5),"noprimers.fastq",sep ='')
-nop <- file.path(path, noprimer_filenames)
+nop <- file.path(noprimer_filenames)
 
 if(opt$illumina == FALSE) {
   ## Remove primers
@@ -71,8 +68,8 @@ if(opt$illumina == FALSE) {
   ## Setting up file names to filter.
   filter_filenames <- paste(substr(basename(PacBio_fns),1,nchar(basename(PacBio_fns))-5),"noprimers.filtered.fastq",sep ='')
   filterEE1_filenames <- paste(substr(basename(PacBio_fns),1,nchar(basename(PacBio_fns))-5),"noprimers.filtered.EE1.fastq",sep ='')
-  filt <- file.path(path,filter_filenames)
-  filtEE1 <- file.path(path,filterEE1_filenames)
+  filt <- file.path(filter_filenames)
+  filtEE1 <- file.path(filterEE1_filenames)
   
   ## Filter reads for tprK length and do not worry about expected errors.
   for (count in c(1:length(filt))) {
@@ -94,7 +91,7 @@ if(opt$illumina == FALSE) {
   # }
   
   RAD_filenames <- paste(substr(basename(PacBio_fns),1,nchar(basename(PacBio_fns))-5),"noprimers.filtered.RAD.fasta",sep ='')
-  RAD_files <- file.path(path, RAD_filenames)
+  RAD_files <- file.path(RAD_filenames)
   
   print("Constructing RAD files...")
   ## Build RAD files for each PacBio sample. This step takes forever!!!
@@ -124,20 +121,11 @@ if(opt$illumina == FALSE) {
   ## RAD denoised files are written.  Let's get some frequencies of different variable regions
   RAD_files_nolines <- paste(substr(RAD_files,1,nchar(RAD_files)-5),"nolines.fasta",sep ='')
   RAD_files_fix <- paste(substr(RAD_files,1,nchar(RAD_files)-5),"nolines.fix.fasta",sep ='')
-  PacBio_freq_path <- paste(path,"/PacBio_frequencies",sep='')
-  RAD_files_fix_newdir <- file.path(PacBio_freq_path,basename(RAD_files_fix))
-  mkdir_freq <- paste("mkdir ",PacBio_freq_path,sep='')
-  # Copies the final PacBio files into the PacBio_frequencies folder. 
-  system(mkdir_freq)
-  copyPacBio <- paste("cp ",PacBio_fns,PacBio_freq_path,";")
-  for (num in 1:length(copyPacBio)) {
-    system(copyPacBio[num])
-  }
-  
+
   # Fixes up the fastas so they wrap and don't have awkward new lines.
   # TODO: fix this section so it works. For some reason the pipeline currently runs without it? But probably should fix this anyway.
   awk_command <- paste("awk '/^>/ {printf(\"\\n%s\\n\",$0);next; } { printf(\"%s\",$0);}  END {printf(\"\\n\");}' < ",RAD_files," > ",RAD_files_nolines," ;")
-  fix_firstline <- paste("tail -n+2 ",RAD_files_nolines," > ",RAD_files_fix_newdir)
+  fix_firstline <- paste("tail -n+2 ",RAD_files_nolines," > ",RAD_files_fix)
   for (count in c(1:length(awk_command))) {
     system(awk_command[count])
     system(fix_firstline[count])
@@ -147,15 +135,14 @@ if(opt$illumina == FALSE) {
   # Calls syph_r to make the final_data.csv for each PacBio sample.
   # TODO: right now this doesn't work if it's a repeat run because of previous .fastq files. Fix so you can rerun safely
   # without having to delete stuff when rerunning.
-  for (num in c(1:length(PacBio_freq_path))) {
-    syphrPacBio_command <- paste("/Library/Frameworks/Python.framework/Versions/3.7/bin/python3 ",syph_path,
-                                 " -i fasta -pacbio -d ",PacBio_freq_path[num],"/",sep='')
+  for (num in c(1:length(RAD_files_fix))) {
+    syphrPacBio_command <- paste("python3 ",syph_path," -i fasta -pacbio -d ./",sep='')
     system(syphrPacBio_command)
   }
   
   ## Make PacBio frequency comparison file
-  PacBio_freq_files = list.files(PacBio_freq_path,pattern="*_final_data.csv")
-  PacBio_freq_files_fullpath = list.files(PacBio_freq_path,pattern="*_final_data.csv",full.names=T)
+  PacBio_freq_files = list.files("./",pattern="*_final_data.csv")
+  PacBio_freq_files_fullpath = list.files("./",pattern="*_final_data.csv",full.names=T)
   compare_PacBio_df <- data.frame(Region=character(),Read=character())
   
   sample_names <- sort(sample_names)

@@ -1,7 +1,172 @@
-FROM ubuntu:18.04
+FROM ubuntu:bionic
 
-# install dependencies from pip3
+## Install Julia
+RUN set -eux; \
+	apt-get update; \
+	apt-get install -y --no-install-recommends \
+		ca-certificates \
+# ERROR: no download agent available; install curl, wget, or fetch
+		curl \
+	; \
+	rm -rf /var/lib/apt/lists/*
+ENV JULIA_PATH /usr/local/julia
+ENV PATH $JULIA_PATH/bin:$PATH
 
+# https://julialang.org/juliareleases.asc
+# Julia (Binary signing key) <buildbot@julialang.org>
+ENV JULIA_GPG 3673DF529D9049477F76B37566E3C7DC03D6E495
+
+# https://julialang.org/downloads/
+ENV JULIA_VERSION 1.5.0-rc1
+
+RUN set -eux; \
+	\
+	savedAptMark="$(apt-mark showmanual)"; \
+	if ! command -v gpg > /dev/null; then \
+		apt-get update; \
+		apt-get install -y --no-install-recommends \
+			gnupg \
+			dirmngr \
+		; \
+		rm -rf /var/lib/apt/lists/*; \
+	fi; \
+	\
+# https://julialang.org/downloads/#julia-command-line-version
+# https://julialang-s3.julialang.org/bin/checksums/julia-1.5.0-rc1.sha256
+# this "case" statement is generated via "update.sh"
+	dpkgArch="$(dpkg --print-architecture)"; \
+	case "${dpkgArch##*-}" in \
+# amd64
+		amd64) tarArch='x86_64'; dirArch='x64'; sha256='a4ea36aa86269116992393067e5afc182707cb4f26eac9fddda08e04a9c7b94d' ;; \
+# arm64v8
+		arm64) tarArch='aarch64'; dirArch='aarch64'; sha256='7e9f3fac46264a2c861c542adce9d6b47276976dab40cbe19ca7ed2c97a82b66' ;; \
+# i386
+		i386) tarArch='i686'; dirArch='x86'; sha256='ebc76bc879f722375e658a2c3cd43304ee8b05035fa46b8ad7c5c8eef1091a42' ;; \
+		*) echo >&2 "error: current architecture ($dpkgArch) does not have a corresponding Julia binary release"; exit 1 ;; \
+	esac; \
+	\
+	folder="$(echo "$JULIA_VERSION" | cut -d. -f1-2)"; \
+	curl -fL -o julia.tar.gz.asc "https://julialang-s3.julialang.org/bin/linux/${dirArch}/${folder}/julia-${JULIA_VERSION}-linux-${tarArch}.tar.gz.asc"; \
+	curl -fL -o julia.tar.gz     "https://julialang-s3.julialang.org/bin/linux/${dirArch}/${folder}/julia-${JULIA_VERSION}-linux-${tarArch}.tar.gz"; \
+	\
+	echo "${sha256} *julia.tar.gz" | sha256sum -c -; \
+	\
+	export GNUPGHOME="$(mktemp -d)"; \
+	gpg --batch --keyserver ha.pool.sks-keyservers.net --recv-keys "$JULIA_GPG"; \
+	gpg --batch --verify julia.tar.gz.asc julia.tar.gz; \
+	command -v gpgconf > /dev/null && gpgconf --kill all; \
+	rm -rf "$GNUPGHOME" julia.tar.gz.asc; \
+	\
+	mkdir "$JULIA_PATH"; \
+	tar -xzf julia.tar.gz -C "$JULIA_PATH" --strip-components 1; \
+	rm julia.tar.gz; \
+	\
+	apt-mark auto '.*' > /dev/null; \
+	[ -z "$savedAptMark" ] || apt-mark manual $savedAptMark; \
+	apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
+	\
+# smoke test
+	julia --version
+
+CMD ["julia"]
+
+
+LABEL org.label-schema.license="GPL-2.0" \
+      org.label-schema.vcs-url="https://github.com/rocker-org/r-apt" \
+      org.label-schema.vendor="Rocker Project" \
+      maintainer="Dirk Eddelbuettel <edd@debian.org>"
+
+## Set a default user. Available via runtime flag `--user docker` 
+## Add user to 'staff' group, granting them write privileges to /usr/local/lib/R/site.library
+## User should also have & own a home directory (for rstudio or linked volumes to work properly). 
+RUN useradd docker \
+	&& mkdir /home/docker \
+	&& chown docker:docker /home/docker \
+	&& addgroup docker staff
+
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends \
+		software-properties-common \
+                ed \
+		less \
+		locales \
+		vim-tiny \
+		wget \
+		ca-certificates \
+        && add-apt-repository --enable-source --yes "ppa:marutter/rrutter3.5" \
+	&& add-apt-repository --enable-source --yes "ppa:marutter/c2d4u3.5" 
+
+## Configure default locale, see https://github.com/rocker-org/rocker/issues/19
+RUN echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen \
+	&& locale-gen en_US.utf8 \
+	&& /usr/sbin/update-locale LANG=en_US.UTF-8
+
+ENV LC_ALL en_US.UTF-8
+ENV LANG en_US.UTF-8
+
+## This was not needed before but we need it now
+ENV DEBIAN_FRONTEND noninteractive
+
+# Now install R and littler, and create a link for littler in /usr/local/bin
+# Default CRAN repo is now set by R itself, and littler knows about it too
+# r-cran-docopt is not currently in c2d4u so we install from source
+RUN apt-get update \
+        && apt-get install -y --no-install-recommends \
+                 littler \
+ 		 r-base \
+ 		 r-base-dev \
+ 		 r-recommended \
+  	&& ln -s /usr/lib/R/site-library/littler/examples/install.r /usr/local/bin/install.r \
+ 	&& ln -s /usr/lib/R/site-library/littler/examples/install2.r /usr/local/bin/install2.r \
+ 	&& ln -s /usr/lib/R/site-library/littler/examples/installGithub.r /usr/local/bin/installGithub.r \
+ 	&& ln -s /usr/lib/R/site-library/littler/examples/testInstalled.r /usr/local/bin/testInstalled.r \
+ 	&& install.r docopt \
+ 	&& rm -rf /tmp/downloaded_packages/ /tmp/*.rds \
+ 	&& rm -rf /var/lib/apt/lists/*
+
+CMD ["bash"]
+
+## Install rJava
+RUN apt-get -y update && apt-get install -y \
+   default-jdk  r-cran-rjava  r-cran-nloptr libssh2-1-dev 
+
+## Install extra R packages using requirements.R
+RUN R -e "install.packages('JuliaCall',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('reticulate',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('tidyr',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('BiocManager')"
+RUN R -e "BiocManager::install('dada2')"
+RUN R -e "BiocManager::install('treeio')"
+RUN R -e "install.packages('tidyverse',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('devtools',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('optparse',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('ggplot2',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('ShortRead',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('reshape2',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('grid',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('nplr',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('dplyr',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('scales',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('gridExtra',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('RColorBrewer',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('ggtree',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('stringr',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('Biostrings',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('phylobase',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('phytools',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('phangorn',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('pegas',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('lubridate',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('ape',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('data.table',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('vegan',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('cowplot',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('randomcoloR',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('tibble',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+
+
+
+# pip install
 RUN apt update && \
     apt install -y python3 ncbi-blast+ && \
     apt install -y python-biopython \
@@ -16,73 +181,4 @@ RUN apt update && \
                  requests \
                  numpy \
                  pandas \
-                 bokeh
-
-# Install dependencies from conda 
-RUN cd /usr/local/ && \
-    wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
-    bash Miniconda3-latest-Linux-x86_64.sh -b -p /usr/local/miniconda && \
-    rm Miniconda3-latest-Linux-x86_64.sh && \
-    ln -s /usr/local/miniconda/bin/conda /usr/local/bin/ && \
-    conda init bash && \
-    /bin/bash -c "source /root/.bashrc" && \
-    conda install -c bioconda bowtie2 krakenuniq kallisto gmap snap-aligner openssl=1.0 samtools=1.7 bedtools bwa mafft bcftools tabix && \
-    conda clean -afy
-# Install Picard 
-
-RUN wget https://github.com/broadinstitute/picard/releases/download/2.18.15/picard.jar -P /usr/bin/
-# ENV PATH="/picard.jar:${PATH}"
-# ENV picard.jar /picard.jar
-
-# Install GATK
-RUN wget https://github.com/broadinstitute/gatk/releases/download/4.0.11.0/gatk-4.0.11.0.zip && unzip gatk-4.0.11.0.zip
-ENV PATH=/gatk-4.0.11.0/:$PATH
-#ENV GATK gatk-4.0.11.0/gatk
-
-# Install VarScan 
-RUN wget --no-check-certificate https://sourceforge.net/projects/varscan/files/latest/download && mv download VarScan
-RUN mv VarScan /usr/local/bin/
-
-# Install gff3ToGenePred
-RUN wget http://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/gff3ToGenePred
-RUN chmod +x gff3ToGenePred
-RUN mv gff3ToGenePred /usr/local/bin
-
-
-
-###########
-# ANNOVAR #
-###########
-
-
-# http://www.openbioinformatics.org/annovar/download/0wgxR2rIVP/annovar.latest.tar.gz
-
-
-# INSTALL
-RUN wget https://github.com/vpeddu/lava/raw/master/docker/annovar.zip && unzip annovar.zip 
-RUN mv annovar/*.pl /usr/local/bin/
-
-
-##########
-# JAVA 8 #
-##########
-
-# Install OpenJDK-8
-RUN apt-get update && \
-    apt-get install -y openjdk-8-jdk && \
-    apt-get install -y ant && \
-    apt-get clean;
-
-# Fix certificate issues
-RUN apt-get update && \
-    apt-get install ca-certificates-java && \
-    apt-get clean && \
-    update-ca-certificates -f;
-
-# Setup JAVA_HOME -- useful for docker commandline
-ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
-RUN export JAVA_HOME
-
-
-
-CMD ["/bin/bash"]
+                 bokeh 
