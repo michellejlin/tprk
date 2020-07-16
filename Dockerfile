@@ -17,7 +17,7 @@ ENV PATH $JULIA_PATH/bin:$PATH
 ENV JULIA_GPG 3673DF529D9049477F76B37566E3C7DC03D6E495
 
 # https://julialang.org/downloads/
-ENV JULIA_VERSION 1.5.0-rc1
+ENV JULIA_VERSION 0.6.4
 
 RUN set -eux; \
 	\
@@ -36,27 +36,28 @@ RUN set -eux; \
 # this "case" statement is generated via "update.sh"
 	dpkgArch="$(dpkg --print-architecture)"; \
 	case "${dpkgArch##*-}" in \
-# amd64
-		amd64) tarArch='x86_64'; dirArch='x64'; sha256='a4ea36aa86269116992393067e5afc182707cb4f26eac9fddda08e04a9c7b94d' ;; \
-# arm64v8
-		arm64) tarArch='aarch64'; dirArch='aarch64'; sha256='7e9f3fac46264a2c861c542adce9d6b47276976dab40cbe19ca7ed2c97a82b66' ;; \
-# i386
-		i386) tarArch='i686'; dirArch='x86'; sha256='ebc76bc879f722375e658a2c3cd43304ee8b05035fa46b8ad7c5c8eef1091a42' ;; \
-		*) echo >&2 "error: current architecture ($dpkgArch) does not have a corresponding Julia binary release"; exit 1 ;; \
+#  amd64
+# 		amd64) tarArch='x86_64'; dirArch='x64'; sha256='a4ea36aa86269116992393067e5afc182707cb4f26eac9fddda08e04a9c7b94d' ;; \
+#  arm64v8
+# 		arm64) tarArch='aarch64'; dirArch='aarch64'; sha256='7e9f3fac46264a2c861c542adce9d6b47276976dab40cbe19ca7ed2c97a82b66' ;; \
+#  i386
+# 		i386) tarArch='i686'; dirArch='x86'; sha256='ebc76bc879f722375e658a2c3cd43304ee8b05035fa46b8ad7c5c8eef1091a42' ;; \
+#		*) echo >&2 "error: current architecture ($dpkgArch) does not have a corresponding Julia binary release"; exit 1 ;; \
 	esac; \
 	\
 	folder="$(echo "$JULIA_VERSION" | cut -d. -f1-2)"; \
-	curl -fL -o julia.tar.gz.asc "https://julialang-s3.julialang.org/bin/linux/${dirArch}/${folder}/julia-${JULIA_VERSION}-linux-${tarArch}.tar.gz.asc"; \
-	curl -fL -o julia.tar.gz     "https://julialang-s3.julialang.org/bin/linux/${dirArch}/${folder}/julia-${JULIA_VERSION}-linux-${tarArch}.tar.gz"; \
+	#curl -fL -o julia.tar.gz.asc "https://julialang-s3.julialang.org/bin/linux/${dirArch}/${folder}/julia-${JULIA_VERSION}-linux-${tarArch}.tar.gz.asc"; \
+	#curl -fL -o julia.tar.gz     "https://julialang-s3.julialang.org/bin/linux/x86/${folder}/julia-${JULIA_VERSION}-linux-${tarArch}.tar.gz"; \
+	curl -fL -o julia.tar.gz     "https://julialang-s3.julialang.org/bin/linux/x64/0.6/julia-0.6.4-linux-x86_64.tar.gz"; \
 	\
-	echo "${sha256} *julia.tar.gz" | sha256sum -c -; \
+	#echo "${sha256} *julia.tar.gz" | sha256sum -c -; \
 	\
-	export GNUPGHOME="$(mktemp -d)"; \
-	gpg --batch --keyserver ha.pool.sks-keyservers.net --recv-keys "$JULIA_GPG"; \
-	gpg --batch --verify julia.tar.gz.asc julia.tar.gz; \
-	command -v gpgconf > /dev/null && gpgconf --kill all; \
-	rm -rf "$GNUPGHOME" julia.tar.gz.asc; \
-	\
+	#export GNUPGHOME="$(mktemp -d)"; \
+	#gpg --batch --keyserver ha.pool.sks-keyservers.net --recv-keys "$JULIA_GPG"; \
+	#gpg --batch --verify julia.tar.gz.asc julia.tar.gz; \
+	#command -v gpgconf > /dev/null && gpgconf --kill all; \
+	#rm -rf "$GNUPGHOME" julia.tar.gz.asc; \
+	#\
 	mkdir "$JULIA_PATH"; \
 	tar -xzf julia.tar.gz -C "$JULIA_PATH" --strip-components 1; \
 	rm julia.tar.gz; \
@@ -128,20 +129,22 @@ CMD ["bash"]
 
 ## Install rJava
 RUN apt-get -y update && apt-get install -y \
-   default-jdk  r-cran-rjava  r-cran-nloptr libssh2-1-dev 
+   default-jdk  r-cran-rjava  r-cran-nloptr libssh2-1-dev
+
+RUN apt-get install libcurl4-openssl-dev 
 
 ## Install extra R packages using requirements.R
 RUN R -e "install.packages('JuliaCall',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('reticulate',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('tidyr',dependencies=TRUE, repos='http://cran.rstudio.com/')"
-RUN R -e "install.packages('BiocManager')"
+RUN R -e "install.packages('BiocManager'); library('BiocManager')"
+RUN R -e "BiocManager::install('ShortRead')"
 RUN R -e "BiocManager::install('dada2')"
 RUN R -e "BiocManager::install('treeio')"
 RUN R -e "install.packages('tidyverse',dependencies=TRUE, repos='http://cran.rstudio.com/')"
-RUN R -e "install.packages('devtools',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+#RUN R -e "install.packages('devtools',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('optparse',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('ggplot2',dependencies=TRUE, repos='http://cran.rstudio.com/')"
-RUN R -e "install.packages('ShortRead',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('reshape2',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('grid',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('nplr',dependencies=TRUE, repos='http://cran.rstudio.com/')"
@@ -181,4 +184,6 @@ RUN apt update && \
                  requests \
                  numpy \
                  pandas \
-                 bokeh 
+                 bokeh \
+				 matplotlib \
+				 regex

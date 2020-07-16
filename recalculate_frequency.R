@@ -7,12 +7,13 @@ suppressMessages(suppressWarnings(require(vegan)))
 option_list <- list(make_option(c("-d", "--directory"), type="character", default=NULL, help="Specify working directory", metavar="character"),
                     make_option(c("-f", "--filename"), type="character", default=NULL, help="Specify file to recalculate frequency.", 
                                 metavar="character"),
+                    make_option(c("-m", "--metadata"), type="character", default=NULL, help="Specify metadata", metavar="character"),
                     make_option(c("-i", "--illumina_check"), type="character", default=FALSE, help="Specify if these files are only PacBio.", 
                                 metavar="character", action="store_true"));
 opt_parser <- OptionParser(option_list=option_list);
 opt <- parse_args(opt_parser)
 
-path <- opt$directory
+path <- "./"
 filename <- (opt$filename)
 
 #####
@@ -32,7 +33,7 @@ filename <- (opt$filename)
 allreads_filtered <- read.table(filename, sep=',', header=TRUE)
 # Grabs the actual number of samples.
 numsamples <- (length(colnames(allreads_filtered)) - 2) / 4
-metadata <- read.table(paste(path,"/metadata.csv", sep=''), sep=',', header=TRUE)
+metadata <- read.table(opt$metadata, sep=',', header=TRUE)
 sample_names <- c(as.character(metadata$SampleName))
 
 # TODO: Implement Illumina check.

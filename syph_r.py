@@ -251,8 +251,12 @@ if __name__ == '__main__':
 	# the nucleotide sequence and the amino acid sequence.
 	all_assignments = open("all_assignments.csv", "w+")
 
+	input_extension = input_format
+	if input_format == "fasta" and is_pacbio:
+		input_extension = "RAD.nolines.fix.fasta"
+
 	for file in os.listdir(current_dir):
-		if file.endswith(input_format):
+		if file.endswith(input_extension):
 			# Matches each read to a region and starts building a list.
 			find_region(file, input_format, is_pacbio, current_dir)
 			strain_name = file.split("." + input_format)[0]
