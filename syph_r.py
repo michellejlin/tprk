@@ -39,7 +39,11 @@ def find_region(sample, input_format, is_pacbio, current_dir):
 		line_block = 2
 	else:
 		line_block = 4
+	print(os.getcwd())
 
+	open("Ill_148B.fastq")
+	print("opened")
+	print(current_dir + "/" + sample)
 	for line_num, line in enumerate(open(current_dir + "/" + sample)):
 		# Finds read name
 		if (line_num % line_block == 0):

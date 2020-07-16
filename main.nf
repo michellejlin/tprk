@@ -67,6 +67,8 @@ INPUT_TYPE = "both"
 PACBIO_FLAG = ""
 ILLUMINA_FLAG = ""
 
+SYPH_R = file("${baseDir}/syph_r.py")
+
 /////////////////////////////
 /*    VALIDATE INPUTS      */
 /////////////////////////////
@@ -189,6 +191,8 @@ if(INPUT_TYPE != "illumina") {
 
         input: 
             tuple val(sample_name), file("PB_${sample_name}.noprimers.filtered.RAD.nolines.fix.fasta") from pacbio_ch
+            file(SYPH_R)
+
         output:
             tuple val(sample_name), file("PB_${sample_name}.noprimers.filtered.RAD.nolines.fix_final_data.csv") into pacbio_final_data_ch
             file "all_assignments.csv" into all_assignments_ch1
@@ -207,12 +211,12 @@ if(INPUT_TYPE != "illumina") {
 // 
 
 // If --ILLUMINA, no all_assignments.csv will have been created in
-// createFrequencyPlots_PacB
+// createFrequencyPlots_PacBio. Creates it here.
 if (INPUT_TYPE == "illumina") {
     process createAllAssignments{
         input:
         output:
-            file ("all_assignments.csv" into all_assignments_ch1)
+            file ("all_assignments.csv") into all_assignments_ch1
         
         script:
         """
@@ -220,7 +224,6 @@ if (INPUT_TYPE == "illumina") {
         """
     }
 }
-
 
 if (INPUT_TYPE != "pacbio") {
     // Create frequency tables for each Illumina sample.
@@ -232,14 +235,15 @@ if (INPUT_TYPE != "pacbio") {
         // maxRetries 3
 
         input: 
-            tuple val(sample_name), file(ILLUMINA_FILE) from illumina_ch
+            file(ILLUMINA_FILE) from illumina_ch.collect()
             file "all_assignments.csv" from all_assignments_ch1
+            file(SYPH_R)
         output:
-            tuple val(sample_name), file("Ill_${sample_name}_final_data.csv") into illumina_final_data_ch
+            file("*final_data.csv") into illumina_final_data_ch
         
         script:
         """
-        python3 ${baseDir}/syph_r.py -i fastq -illumina -d .
+        python3 ${SYPH_R} -i fastq -illumina -d .
         """
     }
 }
