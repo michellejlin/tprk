@@ -68,6 +68,11 @@ PACBIO_FLAG = ""
 ILLUMINA_FLAG = ""
 
 SYPH_R = file("${baseDir}/syph_r.py")
+COMPARE_DF = file("${baseDir}/compare_df.R")
+FILTER_ALL_READS = file("${baseDir}/filterAllReads.py")
+RECALCULATE_FREQUENCY = file("${baseDir}/recalculate_frequency.R")
+SYPH_VISUALIZER = file("${baseDir}/syph_visualizer.py")
+RAD_FREQUENCY = file("${baseDir}/RAD_Frequency.R")
 
 /////////////////////////////
 /*    VALIDATE INPUTS      */
@@ -136,17 +141,29 @@ if (INPUT_TYPE == "both") {
         .fromPath(METADATA_FILE)
         .splitCsv(header:true)
         .map{ row-> tuple(row.SampleName, file(row.Illumina)) }
+    metadata_ch = Channel
+        .fromPath(METADATA_FILE)
+        .splitCsv(header:true)
+        .map{ row-> tuple(row.SampleName, file(row.Illumina), file(row.PacBio), INPUT_TYPE) }
 } else if (INPUT_TYPE == "illumina") {
     illumina_ch = Channel
         .fromPath(METADATA_FILE)
         .splitCsv(header:true)
         .map{ row-> tuple(row.SampleName, file(row.Illumina)) }
+    metadata_ch = Channel
+        .fromPath(METADATA_FILE)
+        .splitCsv(header:true)
+        .map{ row-> tuple(row.SampleName, file(row.Illumina), file(METADATA_FILE), INPUT_TYPE) }
 } else if (INPUT_TYPE == "pacbio") {
     input_pacbio_ch = Channel
         .fromPath(METADATA_FILE)
         .splitCsv(header:true)
         .ifEmpty()
         .map{ row-> tuple(row.SampleName, file(row.PacBio)) }
+    metadata_ch = Channel
+        .fromPath(METADATA_FILE)
+        .splitCsv(header:true)
+        .map{ row-> tuple(row.SampleName, file(METADATA_FILE), file(row.PacBio), INPUT_TYPE) }
 }
 
 ////////////////////////////////////////////////////////
@@ -172,17 +189,18 @@ if(INPUT_TYPE != "illumina") {
 
         input: 
             tuple val(sample_name), file(PACBIO_FILE) from input_pacbio_ch
+            file(RAD_FREQUENCY)
         output:
             tuple val(sample_name), file("PB_${sample_name}.noprimers.filtered.RAD.nolines.fix.fasta") into pacbio_ch
         
         script:
         """
-        Rscript ${baseDir}/RAD_Frequency.R -s ${baseDir} -d ${params.INPUT} -m ${METADATA_FILE} -l ${ILLUMINA_FILE} -a ${PACBIO_FILE}
+        Rscript ${RAD_FREQUENCY} -s ${baseDir} -d ${params.INPUT} -m ${METADATA_FILE} -a ${PACBIO_FILE}
         """
     }
 
     // Create frequency tables for each PacBio sample.
-    process createFrequencyPlots_PacBio {
+    process createFrequencyTables_PacBio {
     container "quay.io/greninger-lab/tprk"
 
         // Retry on fail at most three times 
@@ -190,16 +208,19 @@ if(INPUT_TYPE != "illumina") {
         // maxRetries 3
 
         input: 
-            tuple val(sample_name), file("PB_${sample_name}.noprimers.filtered.RAD.nolines.fix.fasta") from pacbio_ch
-            file(SYPH_R)
-
+            file(PACBIO_FILE) from pacbio_ch.collect()
+            file(METADATA_FILE)
+            file(COMPARE_DF)
         output:
-            tuple val(sample_name), file("PB_${sample_name}.noprimers.filtered.RAD.nolines.fix_final_data.csv") into pacbio_final_data_ch
+            file("*final_data.csv") into pacbio_final_data_ch
+            file("*final_data.csv") into final_data_ch_pb
+
             file "all_assignments.csv" into all_assignments_ch1
+            file "compare_pacbio_df.csv" into compare_pacbio_ch
         
         script:
         """
-        python3 ${baseDir}/syph_r.py -i fasta -pacbio -d .
+        Rscript ${COMPARE_DF} -s ${baseDir} -m ${METADATA_FILE} -d ./ --pacbio
         """
     }
 }
@@ -216,18 +237,22 @@ if (INPUT_TYPE == "illumina") {
     process createAllAssignments{
         input:
         output:
-            file ("all_assignments.csv") into all_assignments_ch1
+            file("all_assignments.csv") into all_assignments_ch1
+            file("compare_pacbio_df.csv") into compare_pacbio_ch
         
         script:
         """
         touch all_assignments.csv
+        touch compare_pacbio_df.csv
         """
     }
 }
 
 if (INPUT_TYPE != "pacbio") {
     // Create frequency tables for each Illumina sample.
-    process createFrequencyPlots_Illumina {
+    // Also grabs frequency tables from PacBio samples and merged the two,
+    // creating allreads.csv file.
+    process createFrequencyTables_Illumina {
     container "quay.io/greninger-lab/tprk"
 
         // Retry on fail at most three times 
@@ -237,87 +262,53 @@ if (INPUT_TYPE != "pacbio") {
         input: 
             file(ILLUMINA_FILE) from illumina_ch.collect()
             file "all_assignments.csv" from all_assignments_ch1
-            file(SYPH_R)
+            file("compare_pacbio_df.csv") from compare_pacbio_ch
+            file(METADATA_FILE)
+            file(COMPARE_DF)
         output:
             file("*final_data.csv") into illumina_final_data_ch
+            file("*final_data.csv") into final_data_ch_ill
+            file("all_assignments.csv") into all_assignments_ch2
+            file("allreads.csv") into allreads_ch
         
         script:
         """
-        python3 ${SYPH_R} -i fastq -illumina -d .
+        Rscript ${COMPARE_DF} -s ${baseDir} -m ${METADATA_FILE} -d ./ --illumina
         """
     }
 }
 
-// // Goes from the original Illumina and PacBio reads to the all-important allreads.csv.
-// // Along the way, also makes frequency tables for each sample.
-// process createAllReads { 
-//     container "quay.io/greninger-lab/tprk"
+// Filters allreads.csv based on set parameters and 
+// recalculates relative frequencies after filter.
+process filterReads {
+    container "quay.io/greninger-lab/tprk"
 
-// 	// Retry on fail at most three times 
-//     // errorStrategy 'retry'
-//     // maxRetries 3
+	// Retry on fail at most three times 
+    // errorStrategy 'retry'
+    // maxRetries 3
 
-//     input:
-//       file METADATA_FILE
-//       file fastq from fastqs.collect()
-//       val sample_name from input_read_ch.collect()
-      
-//     output: 
-//       file "allreads.csv" into allreads_ch
-//       file '*.RAD.nolines.fix.fasta' optional true into rads_ch
-//       file '*final_data.csv' into sample_finaldata_ch
+    input:
+      file "allreads.csv" from allreads_ch
+      file METADATA_FILE
+      file FILTER_ALL_READS
+      file RECALCULATE_FREQUENCY
+    output:
+      file "allreads_filtered.csv" into allreads_filt_ch
+      file "allreads_filtered_heatmap.csv" into allreads_filt_heatmap_ch
 
-//       //Vikas
-//       tuple val("${sample_name}"), file("Ill_${sample_name}_final_data.csv") into illumina_sample_finaldata_ch optional true
-//       tuple val("${sample_name}"), file("PB_${sample_name}.noprimers.filtered.RAD.nolines.fix_final_data.csv") into pacbio_sample_finaldata_ch optional true  
-
-
-
-//     script:
-//     if (INPUT_TYPE == "both") {
-//         """
-//         Rscript ${baseDir}/og_files_to_all_reads.R -s ${baseDir} -d ${params.INPUT} -m ${METADATA_FILE}
-//         """
-//     } else if (INPUT_TYPE == "illumina") {
-//         """
-//         Rscript ${baseDir}/og_files_to_all_reads.R -s ${baseDir} -d ${params.INPUT} -m ${METADATA_FILE} --illumina
-//         """
-//     } else if (INPUT_TYPE == "pacbio") { 
-//         """
-//         Rscript ${baseDir}/og_files_to_all_reads.R -s ${baseDir} -d ${params.INPUT} -m ${METADATA_FILE} --pacbio
-//         """
-//     }
-// }
-
-// // Filters allreads.csv based on set parameters and 
-// // recalculates relative frequencies after filter.
-// process filterReads {
-//     container "quay.io/greninger-lab/tprk"
-
-// 	// Retry on fail at most three times 
-//     // errorStrategy 'retry'
-//     // maxRetries 3
-
-//     input:
-//       file "allreads.csv" from allreads_ch
-//       file METADATA_FILE
-//     output:
-//       file "allreads_filtered.csv" into allreads_filt_ch
-//       file "allreads_filtered_heatmap.csv" into allreads_filt_heatmap_ch
-
-//     script:
-//     """
-//     # Creates allreads_filtered.csv and recalculates the relative frequencies.
-//     python3 ${baseDir}/filterAllReads.py -f ${params.RF_FILTER} -c ${params.COUNT_FILTER} -a "allreads.csv"
-//     Rscript ${baseDir}/recalculate_frequency.R -f "allreads.csv" -m ${METADATA_FILE}
+    script:
+    """
+    # Creates allreads_filtered.csv and recalculates the relative frequencies.
+    python3 ${FILTER_ALL_READS} -f ${params.RF_FILTER} -c ${params.COUNT_FILTER} -a "allreads.csv"
+    Rscript ${RECALCULATE_FREQUENCY} -f "allreads.csv" -m ${METADATA_FILE}
     
-//     # Creates allreads_filtered_heatmap.csv and recalculates the relative frequencies. This csv includes samples under the count/relative freq filters
-// 	# if another sample shares the same read. 
-//     python3 ${baseDir}/filterAllReads.py -f ${params.RF_FILTER} -c ${params.COUNT_FILTER} -a "allreads.csv" -is_heatmap
-//     Rscript ${baseDir}/recalculate_frequency.R -f "allreads_filtered_heatmap.csv" -m ${METADATA_FILE}
+    # Creates allreads_filtered_heatmap.csv and recalculates the relative frequencies. This csv includes samples under the count/relative freq filters
+	# if another sample shares the same read. 
+    python3 ${FILTER_ALL_READS} -f ${params.RF_FILTER} -c ${params.COUNT_FILTER} -a "allreads.csv" -is_heatmap
+    Rscript ${RECALCULATE_FREQUENCY} -f "allreads_filtered_heatmap.csv" -m ${METADATA_FILE}
 
-//     """
-// }
+    """
+}
 
 
 // ////////////////////////////////////////////////////////
@@ -328,32 +319,54 @@ if (INPUT_TYPE != "pacbio") {
 // ////////////////////////////////////////////////////////
 // ////////////////////////////////////////////////////////
 
-// //final_data_ch = Channel
-// //                .from(illumina_sample_finaldata_ch.flatten(), pacbio_sample_finaldata_ch.flatten())
+// Filters allreads.csv based on set parameters and 
+// recalculates relative frequencies after filter.
+process createFrequencyPlots_Illumina {
+    container "quay.io/greninger-lab/tprk"
 
-// //pacbio_sample_finaldata_ch.join(illumina_sample_finaldata_ch).println()
+	// Retry on fail at most three times 
+    // errorStrategy 'retry'
+    // maxRetries 3
 
-// illumina_sample_finaldata_ch.view()
-// process createFrequencyPlots {
-//     container "quay.io/greninger-lab/tprk"
+    input:
+      file(FINAL_DATA) from final_data_ch_ill
+      file(SYPH_VISUALIZER)
+      file(FILTER_ALL_READS)
 
-// 	// Retry on fail at most three times 
-//     // errorStrategy 'retry'
-//     // maxRetries 3
+    output:
+      file("*_filtered.csv") into final_data_filtered_ch_ill
+      file("*_RelativeFreqPlot*") into relative_freq_plot_ch_ill
 
-//     input:
-//         tuple val(sample_name), file(ILLUMINA_FILE), file(PACBIO_FILE), val(INPUT_TYPE) from metadata_ch
-//         file '${sample_name}.*final_data' from sample_finaldata_ch
+    script:
+    """
+    base=`basename ${FINAL_DATA} "_final_data.csv"`
+    python3 ${SYPH_VISUALIZER} ${FINAL_DATA} -t \${base} -o ./
+    
+    python3 ${FILTER_ALL_READS} -f ${params.RF_FILTER} -c ${params.COUNT_FILTER} -a ${FINAL_DATA}
+    """
+    }
 
-//         //Vikas
-//         //tuple val("${samplename}", file(ILLUMINA_FINAL_CSV) from illumina_sample_finaldata_ch
-//         //tuple val("${samplename}", file(PACBIO_FINAL_CSV) from pacbio_sample_finaldata_ch 
+process createFrequencyPlots_PacBio {
+    container "quay.io/greninger-lab/tprk"
 
-//     output:
+	// Retry on fail at most three times 
+    // errorStrategy 'retry'
+    // maxRetries 3
 
-//     script:
-//     """
-//     echo ${sample_name}
-//     cat ${final_data}
-//     """
-// }
+    input:
+      file(FINAL_DATA) from final_data_ch_pb
+      file(SYPH_VISUALIZER)
+      file(FILTER_ALL_READS)
+
+    output:
+      file("*_filtered.csv") into final_data_filtered_ch_pb
+      file("*_RelativeFreqPlot*") into relative_freq_plot_pb
+
+    script:
+    """
+    base=`basename ${FINAL_DATA} "_final_data.csv"`
+    python3 ${SYPH_VISUALIZER} ${FINAL_DATA} -t \${base} -o ./
+    
+    python3 ${FILTER_ALL_READS} -f ${params.RF_FILTER} -c ${params.COUNT_FILTER} -a ${FINAL_DATA}
+    """
+    }

@@ -110,4 +110,4 @@ if __name__ == '__main__':
 	relative_freq_filter = float(args.relative_freq_filter)
 	count_filter = float(args.count_filter)
 
-	filter_table(relative_freq_filter, count_filter, "allreads.csv", args.is_heatmap)
+	filter_table(relative_freq_filter, count_filter, args.allreads_file, args.is_heatmap)

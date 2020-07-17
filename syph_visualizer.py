@@ -156,11 +156,11 @@ if __name__ == '__main__':
 
 	if args.svg:
 		fig1.output_backend = "svg"
-		output_filename = (output_path + "/" + strain + "_RelativeFreqPlot.svg")
+		output_filename = (strain + "_RelativeFreqPlot.svg")
 		output_file(output_filename)
 		export_svgs(fig1, filename=output_filename)
 	else:
-		output_filename = (output_path + "/" + strain + "_RelativeFreqPlot.html")
+		output_filename = (strain + "_RelativeFreqPlot.html")
 		output_file(output_filename, title=strain)
 
 		save(fig1)

@@ -1,3 +1,3 @@
 SampleName,Illumina,PacBio
-148B,Ill_148B.fastq,
-148B2,Ill_148B2.fastq,
+148B,/Users/uwvirongs/Documents/Michelle/tprk_nextflow/tprk/example/Ill_148B.fastq,
+148B2,/Users/uwvirongs/Documents/Michelle/tprk_nextflow/tprk/example/Ill_148B2.fastq,

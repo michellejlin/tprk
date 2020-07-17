@@ -2,3 +2,4 @@ work/*
 testPB/*
 example/*
 *.nextflow.*
+.nextflow/cache/*

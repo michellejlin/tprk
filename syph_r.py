@@ -39,11 +39,7 @@ def find_region(sample, input_format, is_pacbio, current_dir):
 		line_block = 2
 	else:
 		line_block = 4
-	print(os.getcwd())
-
-	open("Ill_148B.fastq")
-	print("opened")
-	print(current_dir + "/" + sample)
+		
 	for line_num, line in enumerate(open(current_dir + "/" + sample)):
 		# Finds read name
 		if (line_num % line_block == 0):
@@ -186,6 +182,11 @@ def make_table(strain_name, current_dir):
 	Vlist_of_aas = [V1_list, V2_list, V3_list, V4_list, V5_list, V6_list, V7_list]
 	Vlist_of_dna = [V1_dna, V2_dna, V3_dna, V4_dna, V5_dna, V6_dna, V7_dna]
 	variable_regions = ["V1", "V2", "V3", "V4", "V5", "V6", "V7"]
+
+	# Get rid of stupidly long name in PacBio.
+	if "RAD" in strain_name:
+		strain_name = strain_name.split(".noprimers.filtered.RAD.nolines.fix.fasta")[0]
+
 	table = open(current_dir + "/" + strain_name + "_final_data.csv", "w+")
 	table2 = open(current_dir + "/over5count_" + strain_name + "_final_data_dna.csv", "w+")
 	table.write("Region,Read,RelativeFreq,Count" + "\n")
