@@ -2,21 +2,17 @@
 # all the final fastas to generate the tree. 
 # Currently this script does not root (until I figure out a way to automatically do that?)
 
-
-if (!requireNamespace("BiocManager", quietly = TRUE)){
-  install.packages("BiocManager") }
-BiocManager::install("treeio")
-
 list.of.packages <- c("treeio","ggtree","stringr","Biostrings","phylobase","pegas","tidyverse","lubridate","ape",
-                      "phytools","plyr","phangorn","RColorBrewer","dplyr","optparse","data.table")
+                      "plyr","phangorn","RColorBrewer","dplyr","optparse","data.table")
 suppressMessages(invisible(lapply(list.of.packages,library,character.only=T)))
 
-option_list <- list(make_option(c("-d", "--directory"), type="character", default=NULL, help="Specify working directory", metavar="character"));
+option_list <- list(make_option(c("-d", "--directory"), type="character", default=NULL, help="Specify working directory", metavar="character"),
+                    make_option(c("-m", "--metadata"), type="character", default=NULL, help="Specify metadata", metavar="character"));
 opt_parser <- OptionParser(option_list=option_list);
 opt <- parse_args(opt_parser)
 
 #path <- opt$directory
-path <- "/Volumes/AndeanBear/tprK_patients/sra_tprk/"
+path <- "./"
 #####
 
 ## To run this script manually in R, uncomment the following lines. You do not need to change the preceding lines of path and script.dir,
@@ -29,12 +25,8 @@ path <- "/Volumes/AndeanBear/tprK_patients/sra_tprk/"
 ## Usage: rscript \path\to\PacBio2tree.R -d [directory]
 
 #####
-
-# Works from the fasta files in the folder PacBio_frequencies
-setwd(paste(path,"/PacBio_frequencies", sep=""))
-
 # Grabs sample names and PacBio files from the metadata file
-metadata <- read.table(paste(path,"/metadata.csv", sep=''), sep=',', header=TRUE)
+metadata <- read.table(opt$metadata, sep=',', header=TRUE)
 PacBio_fns <- c(as.character(metadata$PacBio))
 sample_names <- c(as.character(metadata$SampleName))
 
@@ -159,7 +151,7 @@ AAaln_outfile_filt <- paste0(substr(AAoutfilefilt,1,nchar(AAoutfilefilt)-5),"aln
 #mafft_command <- paste0("mafft --auto ",AAoutfile," > ",AAaln_outfile)
 #system(mafft_command)
 
-mafft_command <- paste0("mafft --auto ",AAoutfilefilt," > ",AAaln_outfile_filt)
+mafft_command <- paste0("/usr/local/miniconda/bin/mafft --auto ",AAoutfilefilt," > ",AAaln_outfile_filt)
 system(mafft_command)
 
 AAtree_outfile <-paste0(substr(AAoutfile,1,nchar(AAoutfile)-5),"aln.tree.nwk")
@@ -167,7 +159,7 @@ AAtree_outfile_filt <-paste0(substr(AAaln_outfile_filt,1,nchar(AAaln_outfile_fil
 
 #fasttree_command <- paste0("fasttree ",AAaln_outfile," > ",AAtree_outfile)
 #system(fasttree_command)
-fasttree_command <- paste0("fasttree ",AAaln_outfile_filt," > ",AAtree_outfile_filt)
+fasttree_command <- paste0("/usr/local/miniconda/bin/fasttree ",AAaln_outfile_filt," > ",AAtree_outfile_filt)
 system(fasttree_command)
 
 ##Read in FastTree newick file
@@ -175,10 +167,12 @@ tree <- read.newick(AAtree_outfile_filt)
 mycolors <- colorRampPalette(brewer.pal(name="Accent", n = 8))(length(sample_names))
 # mycolors <- colorRampPalette(brewer.pal(name="Dark2", n = 8))(length(sample_names)+4)
 
-tree <- reorder(tree,"postorder")
-#tree <- phangorn::midpoint(tree)
-tree <- root(tree, which(tree$tip.label == "148B_seqs86_220"))
-tree <- reorder(tree)
+
+## Have to reorder manually!
+# tree <- reorder(tree,"postorder")
+# tree <- phangorn::midpoint(tree)
+#tree <- root(tree, which(tree$tip.label == "148B_seqs86_220"))
+#tree <- reorder(tree)
 
 ##Expects tip labels to contain the sample name followed by a "_" and will parse the sample name accordingly.
 d2 = data.frame(taxa=tree$tip.label,sample=sapply(strsplit(tree$tip.label,"_"),"[",1),count=as.numeric(sapply(strsplit(tree$tip.label,"_"),"[",3)))
@@ -195,7 +189,7 @@ ggtree <- ggtree(tree) %<+% d2 + geom_tippoint(aes(color=sample,size=percentage)
 #   scale_colour_manual(values=mycolors) + 
 #   geom_treescale(x=0.005,y=150,fontsize=3.5,offset=2) + guides(colour = guide_legend(override.aes = list(size=3))) + 
 #   scale_size(name="Percentage", breaks=c(0.2,0.5,2,5)) 
-ggsave(path=paste(path,"/Figures",sep=""),filename="PacBio_Tree_Filtered3.pdf",height = 6, width=4)
+ggsave(path="./",filename="PacBio_Tree_Filtered.pdf",height = 6, width=4)
 
 
 # ggtree(tree) %<+% d2 + geom_tippoint(aes(color=sample,size=count),alpha=0.8) + 

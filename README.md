@@ -11,7 +11,7 @@ This pipeline was designed to take Illumina and PacBio files straight off the se
 
 1. Install [nextflow](https://www.nextflow.io/docs/latest/getstarted.html#installation).
    - Make sure you move nextflow to a directory in your PATH variable.
-2. Install [docker](https://docs.docker.com/get-docker/).
+2. Install [docker](https://docs.docker.com/get-docker/). The first time running this program will take a while, as the docker image will take some time to build, but this is a one time thing!
 
 
 ## Input Files
@@ -19,16 +19,16 @@ Put the following things in one folder:
 - **All the sequence files to run analysis on**
     - PacBio Q20 reads
     - Single-end Illumina reads trimmed and run through Trimmomatic
-    - By default the pipeline expects both PacBio and Illumina files for every sample. Running the pipeline with just PacBio or just Illumina files is possible with the `-pacbio` and `-illumina` flags respectively. However, some plots require both files to be generated and these plots will not be output.
+    - By default the pipeline expects both PacBio and Illumina files for every sample. Running the pipeline with just PacBio or just Illumina files is possible with the `--pacbio` and `--illumina` flags respectively. However, some plots require both files to be generated and these plots will not be output.
 - **Metadata file.** This should be a .csv with three columns: SampleName, PacBio, Illumina, shown in the table below. Make sure to include absolute paths to PacBio and Illumina files!
-    - This file should be called metadata.csv and placed in the same folder as your files to be analyzed.
+    - This file should be placed in the same folder as your files to be analyzed.
     - There MUST be a newline character at the end of this file to be read as a valid csv. Simply hit enter in the last row to ensure there is a valid new line.
     - If running just Illumina or just PacBio, simply leave those columns blank (but make sure to have commas as appropriate).
     - An example metadata file is provided. The general format of the metadata file should be three columns, separated by commas, as shown:
 
 | SampleName  | Illumina  | PacBio |
 | ------------- | ------------- | ------------- |
-| This will largely be the name used for generating tables and plots. | The Illumina file specified for the sample name. This must match exactly the name of the matching file in the folder. This should be a trimmed file run through Trimmomatic. | The PacBio file specified for the sample name. This must match exactly the name of the matching file in the folder. This should be a Q20 file.  | 
+| This will largely be the name used for generating tables and plots. | Should be in format Ill_[sample name].fastq. The Illumina file specified for the sample name. This must match exactly the name of the matching file in the folder. This should be a trimmed file run through Trimmomatic. | Should be in format PB_[sample name].fasta. The PacBio file specified for the sample name. This must match exactly the name of the matching file in the folder. This should be a Q20 file.  | 
 
 ## Usage
 - Example command for just Illumina files in current directory: ```nextflow run michellejlin/tprk -r nextflow --INPUT ./ --OUTDIR output/ --ILLUMINA -resume -with-docker ubuntu:18.04 -with-trace```

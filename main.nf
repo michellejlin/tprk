@@ -4,15 +4,12 @@ def helpMessage() {
     log.info"""
     tprK pipeline, with nextflow!
 
-    Usage: 
-
     An example command for running the pipeline is as follows:
-    nextflow run michellejlin/tprk_nextflow \\
+    nextflow run michellejlin/tprk -r nextflow --INPUT ./ --OUTDIR output/ -resume -with-docker ubuntu:18.04 -with-trace \\
 
     Mandatory Arguments
         --INPUT         Input folder where all fastqs are located.
                         ./ can be used for current directory.
-                        Fastqs should all be gzipped. This can be done with the command gzip *.fastq.
         --OUTDIR        Output directßory.
         --METADATA      Metadata file formatted in a .csv with columns: SampleName, Illumina, PacBio.
                         If running with --PACBIO or --ILLUMINA simply leave those columns blank (but make sure to
@@ -73,6 +70,10 @@ FILTER_ALL_READS = file("${baseDir}/filterAllReads.py")
 RECALCULATE_FREQUENCY = file("${baseDir}/recalculate_frequency.R")
 SYPH_VISUALIZER = file("${baseDir}/syph_visualizer.py")
 RAD_FREQUENCY = file("${baseDir}/RAD_Frequency.R")
+PACBIO_VS_ILLUMINA = file("${baseDir}/PacBio_v_Illumina_plots.R")
+VARIABLE_REGION_COMPARE = file("${baseDir}/Variable_region_compare.R")
+ALLDATA_VISUALIZER = file("${baseDir}/alldata_visualizer_alex.py")
+PACBIOTREE = file("${baseDir}/PacBio2tree.R")
 
 /////////////////////////////
 /*    VALIDATE INPUTS      */
@@ -158,7 +159,6 @@ if (INPUT_TYPE == "both") {
     input_pacbio_ch = Channel
         .fromPath(METADATA_FILE)
         .splitCsv(header:true)
-        .ifEmpty()
         .map{ row-> tuple(row.SampleName, file(row.PacBio)) }
     metadata_ch = Channel
         .fromPath(METADATA_FILE)
@@ -166,14 +166,19 @@ if (INPUT_TYPE == "both") {
         .map{ row-> tuple(row.SampleName, file(METADATA_FILE), file(row.PacBio), INPUT_TYPE) }
 }
 
-////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////
-/*                                                    */
-/*        CREATE FREQUENCY PLOTS PER SAMPLE           */
-/*                                                    */
-////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////
+sample_name_ch = Channel
+        .fromPath(METADATA_FILE)
+        .splitCsv(header:true)
+        .map{ row-> row.SampleName }
 
+
+////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////
+/*                                                    */
+/*        CREATE FREQUENCY TABLES PER SAMPLE          */
+/*                                                    */
+////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////
 
 // 
 // PacBio Section
@@ -192,6 +197,8 @@ if(INPUT_TYPE != "illumina") {
             file(RAD_FREQUENCY)
         output:
             tuple val(sample_name), file("PB_${sample_name}.noprimers.filtered.RAD.nolines.fix.fasta") into pacbio_ch
+            tuple val(sample_name), file("PB_${sample_name}.noprimers.filtered.RAD.nolines.fix.fasta") into pacbio_ch2
+            val(sample_name) into pacbio_sample_name_ch
         
         script:
         """
@@ -250,7 +257,7 @@ if (INPUT_TYPE == "illumina") {
 
 if (INPUT_TYPE != "pacbio") {
     // Create frequency tables for each Illumina sample.
-    // Also grabs frequency tables from PacBio samples and merged the two,
+    // Also grabs frequency tables from PacBio samples and merges the two,
     // creating allreads.csv file.
     process createFrequencyTables_Illumina {
     container "quay.io/greninger-lab/tprk"
@@ -278,6 +285,10 @@ if (INPUT_TYPE != "pacbio") {
     }
 }
 
+//
+// All reads section
+// 
+
 // Filters allreads.csv based on set parameters and 
 // recalculates relative frequencies after filter.
 process filterReads {
@@ -287,6 +298,8 @@ process filterReads {
     // errorStrategy 'retry'
     // maxRetries 3
 
+    publishDir params.OUTDIR, mode: 'copy'
+
     input:
       file "allreads.csv" from allreads_ch
       file METADATA_FILE
@@ -295,6 +308,7 @@ process filterReads {
     output:
       file "allreads_filtered.csv" into allreads_filt_ch
       file "allreads_filtered_heatmap.csv" into allreads_filt_heatmap_ch
+      file "allreads.csv" into allreads_ch2
 
     script:
     """
@@ -321,6 +335,7 @@ process filterReads {
 
 // Filters allreads.csv based on set parameters and 
 // recalculates relative frequencies after filter.
+// Create relative frequency plots for Illumina samples. Default html.
 process createFrequencyPlots_Illumina {
     container "quay.io/greninger-lab/tprk"
 
@@ -328,24 +343,31 @@ process createFrequencyPlots_Illumina {
     // errorStrategy 'retry'
     // maxRetries 3
 
+    publishDir "${params.OUTDIR}/Figures/Relative_Frequency_Plots", mode: 'copy', pattern: '*_RelativeFreqPlot*'
+
     input:
       file(FINAL_DATA) from final_data_ch_ill
       file(SYPH_VISUALIZER)
       file(FILTER_ALL_READS)
+      val(sample_name) from sample_name_ch
 
     output:
-      file("*_filtered.csv") into final_data_filtered_ch_ill
+      tuple val(sample_name), file("Ill_${sample_name}_final_data_filtered.csv") into final_data_filtered_ch_ill
       file("*_RelativeFreqPlot*") into relative_freq_plot_ch_ill
 
     script:
     """
-    base=`basename ${FINAL_DATA} "_final_data.csv"`
-    python3 ${SYPH_VISUALIZER} ${FINAL_DATA} -t \${base} -o ./
+    python3 ${SYPH_VISUALIZER} Ill_${sample_name}_final_data.csv -t Ill_${sample_name} -o ./
     
-    python3 ${FILTER_ALL_READS} -f ${params.RF_FILTER} -c ${params.COUNT_FILTER} -a ${FINAL_DATA}
+    python3 ${FILTER_ALL_READS} -f ${params.RF_FILTER} -c ${params.COUNT_FILTER} -a Ill_${sample_name}_final_data.csv
+    python3 ${SYPH_VISUALIZER} Ill_${sample_name}_final_data_filtered.csv -t Ill_${sample_name}_filtered -o ./
+
     """
     }
 
+// Filters allreads.csv based on set parameters and 
+// recalculates relative frequencies after filter.
+// Create relative frequency plots for PacBio samples. Default html.
 process createFrequencyPlots_PacBio {
     container "quay.io/greninger-lab/tprk"
 
@@ -353,20 +375,140 @@ process createFrequencyPlots_PacBio {
     // errorStrategy 'retry'
     // maxRetries 3
 
+    publishDir "${params.OUTDIR}/Figures/Relative_Frequency_Plots", mode: 'copy', pattern: '*_RelativeFreqPlot*'
+
     input:
       file(FINAL_DATA) from final_data_ch_pb
       file(SYPH_VISUALIZER)
       file(FILTER_ALL_READS)
+      val(sample_name) from pacbio_sample_name_ch
 
     output:
-      file("*_filtered.csv") into final_data_filtered_ch_pb
+      tuple val(sample_name), file("PB_${sample_name}.noprimers.filtered.RAD.nolines.fix_final_data_filtered.csv") into final_data_filtered_ch_pb
       file("*_RelativeFreqPlot*") into relative_freq_plot_pb
 
     script:
     """
-    base=`basename ${FINAL_DATA} "_final_data.csv"`
-    python3 ${SYPH_VISUALIZER} ${FINAL_DATA} -t \${base} -o ./
+    python3 ${SYPH_VISUALIZER} PB_${sample_name}.noprimers.filtered.RAD.nolines.fix_final_data.csv -t PB_${sample_name} -o ./
     
-    python3 ${FILTER_ALL_READS} -f ${params.RF_FILTER} -c ${params.COUNT_FILTER} -a ${FINAL_DATA}
+    python3 ${FILTER_ALL_READS} -f ${params.RF_FILTER} -c ${params.COUNT_FILTER} -a PB_${sample_name}.noprimers.filtered.RAD.nolines.fix_final_data.csv
+    python3 ${SYPH_VISUALIZER} PB_${sample_name}.noprimers.filtered.RAD.nolines.fix_final_data_filtered.csv -t PB_${sample_name}_filtered -o ./
+
     """
     }
+
+
+
+// Generates PacBio vs. Illumina scatterplots for each sample. Compares filtered and non-filtered side by side,
+// as well as automatically generates a zoomed in version from 0-10% relative frequency.
+// Does not occur if running only PacBio or only Illumina files.
+if (INPUT_TYPE == "both") {
+    process createPacbioVsIlluminaPlots {
+        container "quay.io/greninger-lab/tprk"
+
+        // Retry on fail at most three times 
+        // errorStrategy 'retry'
+        // maxRetries 3
+
+        publishDir "${params.OUTDIR}Figures/PacBio_vs_Illumina_Plots", mode: 'copy'
+
+        input:
+        file("allreads.csv") from allreads_ch
+        file("allreads_filtered.csv") from allreads_filt_ch
+        tuple val(sample_name), file(ILLUMINA_FILE), file(PACBIO_FILE), val(INPUT_TYPE) from metadata_ch
+        file(PACBIO_VS_ILLUMINA)
+
+        output:
+        file("*.pdf") into pacbio_v_illumina_plots_ch
+
+        script:
+        """
+        Rscript ${PACBIO_VS_ILLUMINA} -p ./ -s ${sample_name}
+        """
+    }
+}
+
+// Generates dot-line plots for comparing variable regions between two samples.
+// By default, does only filtered plots.
+if (INPUT_TYPE != "pacbio") {
+    process createVariableRegionComparisons {
+        container "quay.io/greninger-lab/tprk"
+
+        // Retry on fail at most three times 
+        // errorStrategy 'retry'
+        // maxRetries 3
+
+        publishDir "${params.OUTDIR}Figures/Variable_Region_Comparisons", mode: 'copy'
+
+        input:
+        file("allreads.csv") from allreads_ch
+        file("allreads_filtered.csv") from allreads_filt_ch
+        file(VARIABLE_REGION_COMPARE)
+        file(METADATA_FILE)
+
+        output:
+        file("*.pdf") into variable_region_ch
+
+        script:
+        """
+        Rscript ${VARIABLE_REGION_COMPARE} -d ./ -m ${METADATA_FILE}
+        """
+    }
+}
+
+
+if (INPUT_TYPE != "illumina") {
+    // Creates a ggtree of all the PacBio samples.
+    // Currently automatically roots by midpoint, but will have to manually 
+    // reorder by certain branch if needed.
+    process createPacBioTree{
+        container "quay.io/greninger-lab/tprk"
+
+        // Retry on fail at most three times 
+        // errorStrategy 'retry'
+        // maxRetries 3
+
+        publishDir "${params.OUTDIR}Figures/Tree", mode: 'copy'
+
+        input:
+        file(METADATA_FILE)
+        file(PACBIOTREE)
+        file(PACBIO_FILE) from pacbio_ch2.collect()
+
+        output:
+        file("PacBio_Tree_Filtered.pdf") into tree_ch
+        file("*_fullORFs.fasta") into tree_ch1
+        file("*.tsv") into tree_ch2
+        file("*.nwk") into tree_ch3
+
+        script:
+        """
+        Rscript ${PACBIOTREE} -d . -m ${METADATA_FILE}
+        """
+    }
+}
+
+// Generates visualizations (heatmap and variable regions) for filtered
+// allreads.csv. Default is html.
+process visualizeAllData {
+        container "quay.io/greninger-lab/tprk"
+
+        // Retry on fail at most three times 
+        // errorStrategy 'retry'
+        // maxRetries 3
+
+        publishDir "${params.OUTDIR}Figures", mode: 'copy'
+
+        input:
+        file("allreads_filtered.csv") from allreads_filt_ch
+        file(METADATA_FILE)
+        file(ALLDATA_VISUALIZER)
+
+        output:
+        file("all_*") into alldata_visual_ch
+
+        script:
+        """
+        python3 ${ALLDATA_VISUALIZER} allreads_filtered.csv ${METADATA_FILE}
+        """
+}

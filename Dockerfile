@@ -132,16 +132,28 @@ RUN apt-get -y update && apt-get install -y \
    default-jdk  r-cran-rjava  r-cran-nloptr libssh2-1-dev
 
 RUN apt-get install libcurl4-openssl-dev 
+RUN yes | apt-get install libv8-dev
+RUN yes | apt-get install libssl-dev
+RUN yes | apt-get install libxml2-dev
+RUN yes | apt-get install libudunits2-dev
+RUN yes | apt install libgdal-dev
+RUN yes | apt-get install libmagick++-dev
 
 ## Install extra R packages using requirements.R
 RUN R -e "install.packages('JuliaCall',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('reticulate',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('tidyr',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('XML', repos = 'http://www.omegahat.net/R')"
+RUN R -e "install.packages('openssl',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('BiocManager'); library('BiocManager')"
 RUN R -e "BiocManager::install('ShortRead')"
 RUN R -e "BiocManager::install('dada2')"
 RUN R -e "BiocManager::install('treeio')"
-RUN R -e "install.packages('tidyverse',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+RUN R -e "BiocManager::install('ggtree')"
+RUN R -e "BiocManager::install('phylobase')"
+RUN R -e "BiocManager::install('randomcoloR')"
+RUN R -e "BiocManager::install('tidyverse')"
+RUN R -e "BiocManager::install('pegas')"
 #RUN R -e "install.packages('devtools',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('optparse',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('ggplot2',dependencies=TRUE, repos='http://cran.rstudio.com/')"
@@ -152,7 +164,6 @@ RUN R -e "install.packages('dplyr',dependencies=TRUE, repos='http://cran.rstudio
 RUN R -e "install.packages('scales',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('gridExtra',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('RColorBrewer',dependencies=TRUE, repos='http://cran.rstudio.com/')"
-RUN R -e "install.packages('ggtree',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('stringr',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('Biostrings',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('phylobase',dependencies=TRUE, repos='http://cran.rstudio.com/')"
@@ -164,7 +175,6 @@ RUN R -e "install.packages('ape',dependencies=TRUE, repos='http://cran.rstudio.c
 RUN R -e "install.packages('data.table',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('vegan',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('cowplot',dependencies=TRUE, repos='http://cran.rstudio.com/')"
-RUN R -e "install.packages('randomcoloR',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('tibble',dependencies=TRUE, repos='http://cran.rstudio.com/')"
 
 
@@ -187,3 +197,14 @@ RUN apt update && \
                  bokeh \
 				 matplotlib \
 				 regex
+
+# Install mafft
+RUN cd /usr/local/ && \
+    wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
+    bash Miniconda3-latest-Linux-x86_64.sh -b -p /usr/local/miniconda && \
+    rm Miniconda3-latest-Linux-x86_64.sh && \
+    ln -s /usr/local/miniconda/bin/conda /usr/local/bin/ && \
+    conda init bash && \
+    /bin/bash -c "source /root/.bashrc" && \
+    conda install -c bioconda bowtie2 samtools=1.7 bedtools bwa mafft bcftools tabix fasttree && \
+    conda clean -afy

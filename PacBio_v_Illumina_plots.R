@@ -17,7 +17,7 @@ option_list <- list(make_option(c("-p", "--path"), type="character", default=NUL
 opt_parser <- OptionParser(option_list=option_list);
 opt <- parse_args(opt_parser)
 
-path <- opt$path
+path <- "./"
 sample_name <- opt$sample_name
 
 #####
@@ -78,7 +78,7 @@ plot_filt <- ggplot(alldatafilt,aes(x=alldatafilt[[illrf_col]],y=alldatafilt[[pb
   annotate("text", x=80, y=18, size=3, label=paste("intercept = ",round(model_filt$coefficients[1],3),sep=""), 3) + 
   theme(aspect.ratio = 1,axis.title.x = element_text(size=9),axis.title.y = element_text(size=9))
 
-ggsave(paste(sample_name,"Illumina_vs_PacBio_r.pdf",sep="_"),path="Figures",plot=plot_filt,width=6,height=3,units="in")
+ggsave(paste(sample_name,"Illumina_vs_PacBio_r.pdf",sep="_"),path="./",plot=plot_filt,width=6,height=3,units="in")
 
 g_legend<-function(a.gplot){
   tmp <- ggplot_gtable(ggplot_build(a.gplot))
@@ -93,7 +93,7 @@ figure <- grid.arrange(arrangeGrob(plot + theme(legend.position="none"),
                                    nrow=1),
                        mylegend, nrow=2,heights=c(10, 1))
 # Saves the plot in the Figures/ subdirectory.
-ggsave(paste(sample_name,"Illumina_vs_PacBio.pdf",sep="_"),path="Figures",plot=figure,width=6,height=3,units="in")
+ggsave(paste(sample_name,"Illumina_vs_PacBio.pdf",sep="_"),path="./",plot=figure,width=6,height=3,units="in")
 
 
 # Creates plot zoomed in on range 0-10.
@@ -109,7 +109,7 @@ figurelim10 <- grid.arrange(arrangeGrob(lim10plot + theme(legend.position="none"
                                    lim10plot_filt + theme(legend.position="none"), nrow=1),
                        mylegend, nrow=2,heights=c(10, 1))
 # Saves the plot in the Figures/ subdirectory.
-ggsave(paste(sample_name,"Illumina_vs_PacBio_lim0-10.pdf",sep="_"),path="Figures",plot=figurelim10,width=6,height=3,units="in")
+ggsave(paste(sample_name,"Illumina_vs_PacBio_lim0-10.pdf",sep="_"),path="./",plot=figurelim10,width=6,height=3,units="in")
 
 file.exists("Rplots.pdf")
 file.remove("Rplots.pdf")

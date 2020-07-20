@@ -1,21 +1,17 @@
 # Generates dot-line plots for comparing the variable regions between two samples.
 # Currently takes the path and goes through the allreads.csv.
 
-# TODO: Find a better way to organize these so they don't generate a billion files.
-# TODO: Also maybe do it for the filtered data too.
-
 list.of.packages <- c("ggplot2", "grid", "nplr", "plyr", "dplyr", "scales", "gridExtra", "RColorBrewer", "optparse","randomcoloR", "cowplot",
                       "tidyr", "tibble")
-new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-if(length(new.packages)) install.packages(new.packages)
-suppressMessages(invisible(lapply(list.of.packages,library,character.only=T)))
+lapply(list.of.packages,library,character.only=T)
 
-option_list <- list(make_option(c("-p", "--path"), type="character", default=NULL, help="Path to allreads.csv", 
-                                metavar="character"));
+option_list <- list(make_option(c("-d", "--directory"), type="character", default=NULL, help="Specify working directory", metavar="character"),
+                    make_option(c("-m", "--metadata"), type="character", default=NULL, help="Specify metadata", metavar="character"));
 opt_parser <- OptionParser(option_list=option_list);
 opt <- parse_args(opt_parser)
 
-path <- opt$path
+#path <- opt$directory
+path <- "."
 
 #####
 
@@ -33,10 +29,8 @@ path <- opt$path
 allreads <- paste(path,"/allreads_filtered.csv", sep="")
 allreads_filtered <- paste(path,"/allreads_filtered.csv", sep="")
 # Grabs sample names from metadata.csv.
-metadata_csv <- paste(path,"/metadata.csv", sep="")
-metadata = read.csv(metadata_csv)
+metadata <- read.table(opt$metadata, sep=',', header=TRUE)
 sample_names = as.character(metadata$SampleName)
-setwd(path)
   
 alldata <- read.csv(allreads,header=TRUE,sep=",",stringsAsFactors = FALSE)
 
@@ -62,7 +56,7 @@ for (i in 1:(length(sample_names) - 1)) {
       facet_wrap(~Region,nrow=1) + theme(legend.position = "none") + theme_bw() + theme(panel.grid.major.x = element_blank(), panel.grid.minor = element_blank(),panel.background = element_blank()) +
       theme(axis.text.x=element_text(angle=45,hjust=1))
     h1 <- h + colScale
-    suppressMessages(ggsave(paste(sample_names[i],"_vs_",sample_names[j],"_VariableRegions_DotLine.pdf",sep=""),
-           path="Figures/Variable_Region_Comparisons",plot=h1,width=5,height=4,units="in"))
+    suppressMessages(ggsave(paste(sample_names[i],"_vs_",sample_names[j],"_VariableRegions_DotLine_Filtered.pdf",sep=""),
+           path="./",plot=h1,width=5,height=4,units="in"))
   }
 }
