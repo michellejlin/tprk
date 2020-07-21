@@ -208,7 +208,7 @@ if(INPUT_TYPE != "illumina") {
 
     // Create frequency tables for each PacBio sample.
     process createFrequencyTables_PacBio {
-    container "quay.io/greninger-lab/tprk"
+    container "quay.io/greninger-lab/tprk:latest"
 
         // Retry on fail at most three times 
         // errorStrategy 'retry'
@@ -260,7 +260,7 @@ if (INPUT_TYPE != "pacbio") {
     // Also grabs frequency tables from PacBio samples and merges the two,
     // creating allreads.csv file.
     process createFrequencyTables_Illumina {
-    container "quay.io/greninger-lab/tprk"
+    container "quay.io/greninger-lab/tprk:latest"
 
         // Retry on fail at most three times 
         // errorStrategy 'retry'
@@ -292,7 +292,7 @@ if (INPUT_TYPE != "pacbio") {
 // Filters allreads.csv based on set parameters and 
 // recalculates relative frequencies after filter.
 process filterReads {
-    container "quay.io/greninger-lab/tprk"
+    container "quay.io/greninger-lab/tprk:latest"
 
 	// Retry on fail at most three times 
     // errorStrategy 'retry'
@@ -337,7 +337,7 @@ process filterReads {
 // recalculates relative frequencies after filter.
 // Create relative frequency plots for Illumina samples. Default html.
 process createFrequencyPlots_Illumina {
-    container "quay.io/greninger-lab/tprk"
+    container "quay.io/greninger-lab/tprk:latest"
 
 	// Retry on fail at most three times 
     // errorStrategy 'retry'
@@ -369,7 +369,7 @@ process createFrequencyPlots_Illumina {
 // recalculates relative frequencies after filter.
 // Create relative frequency plots for PacBio samples. Default html.
 process createFrequencyPlots_PacBio {
-    container "quay.io/greninger-lab/tprk"
+    container "quay.io/greninger-lab/tprk:latest"
 
 	// Retry on fail at most three times 
     // errorStrategy 'retry'
@@ -404,7 +404,7 @@ process createFrequencyPlots_PacBio {
 // Does not occur if running only PacBio or only Illumina files.
 if (INPUT_TYPE == "both") {
     process createPacbioVsIlluminaPlots {
-        container "quay.io/greninger-lab/tprk"
+        container "quay.io/greninger-lab/tprk:latest"
 
         // Retry on fail at most three times 
         // errorStrategy 'retry'
@@ -432,7 +432,7 @@ if (INPUT_TYPE == "both") {
 // By default, does only filtered plots.
 if (INPUT_TYPE != "pacbio") {
     process createVariableRegionComparisons {
-        container "quay.io/greninger-lab/tprk"
+        container "quay.io/greninger-lab/tprk:latest"
 
         // Retry on fail at most three times 
         // errorStrategy 'retry'
@@ -461,8 +461,9 @@ if (INPUT_TYPE != "illumina") {
     // Creates a ggtree of all the PacBio samples.
     // Currently automatically roots by midpoint, but will have to manually 
     // reorder by certain branch if needed.
+    // Also saves ggtree in RDS which can be accessed with readRDS() in R for manual edits.
     process createPacBioTree{
-        container "quay.io/greninger-lab/tprk"
+        container "quay.io/greninger-lab/tprk:latest"
 
         // Retry on fail at most three times 
         // errorStrategy 'retry'
@@ -480,6 +481,7 @@ if (INPUT_TYPE != "illumina") {
         file("*_fullORFs.fasta") into tree_ch1
         file("*.tsv") into tree_ch2
         file("*.nwk") into tree_ch3
+        file("*.RData") into tree_ch4
 
         script:
         """
@@ -491,7 +493,7 @@ if (INPUT_TYPE != "illumina") {
 // Generates visualizations (heatmap and variable regions) for filtered
 // allreads.csv. Default is html.
 process visualizeAllData {
-        container "quay.io/greninger-lab/tprk"
+        container "quay.io/greninger-lab/tprk:latest"
 
         // Retry on fail at most three times 
         // errorStrategy 'retry'

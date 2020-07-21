@@ -3,7 +3,7 @@
 # Currently this script does not root (until I figure out a way to automatically do that?)
 
 list.of.packages <- c("treeio","ggtree","stringr","Biostrings","phylobase","pegas","tidyverse","lubridate","ape",
-                      "plyr","phangorn","RColorBrewer","dplyr","optparse","data.table")
+                      "plyr","phangorn","RColorBrewer","dplyr","optparse","data.table","tidyr", "BiocGenerics")
 suppressMessages(invisible(lapply(list.of.packages,library,character.only=T)))
 
 option_list <- list(make_option(c("-d", "--directory"), type="character", default=NULL, help="Specify working directory", metavar="character"),
@@ -48,7 +48,8 @@ df2BString=function(df){
 
 ## Function to remove translated ORFs with stop codons
 removeTruncatedORF=function(AAFile){
-  AAFile[,2] <- as.character(AAFile[,2])
+  AAFile[,2]$sequences<-as.character(AAFile[,2]$sequences)
+
   for (num in c(1:length(AAFile[,2]))){
     if (!(regexpr("\\*", AAFile[num,2]) == nchar(AAFile[num,2]))){
       AAFile[num,] <- NA}
@@ -65,7 +66,7 @@ removeFrameShift=function(AAFile){
                  "LETKGSDPDTSFLEGLDLGV",
                  "YFPVYGKVWGSYRHDMGEYG",
                  "WEQGKLQENSNVVIEKNVTE")
-  AAFile[,2] <- as.character(AAFile[,2])
+  AAFile[,2]$sequences<-as.character(AAFile[,2]$sequences)
   for (num in c(1:length(AAFile[,2]))){
       frameShift <- FALSE
       for (i in c(1:length(conserved))){
@@ -117,8 +118,8 @@ for (i in 1:length(PacBio_fns)) {
     allAA <- df_aa
     allAAfilt <- df_aa_filt
   } else {
-    allAA <- rbind(allAA, df_aa)
-    allAAfilt <- rbind(allAAfilt, df_aa_filt)
+    allAA <- base::rbind(allAA, df_aa)
+    allAAfilt <- base::rbind(allAAfilt, df_aa_filt)
   }
 }
 
@@ -130,8 +131,14 @@ allAAfilt_fullORFs_df <- drop_na(removeTruncatedORF(allAAfilt))
 allAA_fullORFs_df <- drop_na(removeFrameShift(allAA_fullORFs_df))
 allAAfilt_fullORFs_df <- drop_na(removeFrameShift(allAAfilt_fullORFs_df))
 
-allAAfilt_fullORFs_df[which(duplicated(allAAfilt_fullORFs_df$sequences) == TRUE),]
+print("all aa filt full orfs df")
+print(allAAfilt_fullORFs_df)
+print("end")
 
+allAAfilt_fullORFs_df[which(duplicated(allAAfilt_fullORFs_df$sequences) == TRUE),]
+print("now which duplicated")
+print(allAAfilt_fullORFs_df)
+print("end")
 
 write.table(allAAfilt_fullORFs_df,"Table_allAAfilt_fullORFs.tsv",sep='\t',row.names=FALSE)
 allAA_fullORFs_BString <- df2BString(allAA_fullORFs_df)
@@ -162,6 +169,7 @@ AAtree_outfile_filt <-paste0(substr(AAaln_outfile_filt,1,nchar(AAaln_outfile_fil
 fasttree_command <- paste0("/usr/local/miniconda/bin/fasttree ",AAaln_outfile_filt," > ",AAtree_outfile_filt)
 system(fasttree_command)
 
+
 ##Read in FastTree newick file
 tree <- read.newick(AAtree_outfile_filt)
 mycolors <- colorRampPalette(brewer.pal(name="Accent", n = 8))(length(sample_names))
@@ -189,8 +197,11 @@ ggtree <- ggtree(tree) %<+% d2 + geom_tippoint(aes(color=sample,size=percentage)
 #   scale_colour_manual(values=mycolors) + 
 #   geom_treescale(x=0.005,y=150,fontsize=3.5,offset=2) + guides(colour = guide_legend(override.aes = list(size=3))) + 
 #   scale_size(name="Percentage", breaks=c(0.2,0.5,2,5)) 
-ggsave(path="./",filename="PacBio_Tree_Filtered.pdf",height = 6, width=4)
 
+
+#ggsave(path="./",filename="PacBio_Tree_Filtered.pdf",height = 6, width=4)
+ggsave(plot = ggtree, filename="PacBio_Tree_Filtered.pdf",height = 6, width=4)
+save.image(file = "PacBio_Tree_Filtered.RData")
 
 # ggtree(tree) %<+% d2 + geom_tippoint(aes(color=sample,size=count),alpha=0.8) + 
 #   theme(legend.position = c(0.8,0.2),legend.title = element_blank(),legend.key.width=unit(0.2,"cm"),legend.text=element_text(size=10)) + 

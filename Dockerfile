@@ -208,3 +208,5 @@ RUN cd /usr/local/ && \
     /bin/bash -c "source /root/.bashrc" && \
     conda install -c bioconda bowtie2 samtools=1.7 bedtools bwa mafft bcftools tabix fasttree && \
     conda clean -afy
+
+RUN R -e "BiocManager::install('BiocGenerics')"

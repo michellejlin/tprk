@@ -102,7 +102,9 @@ if __name__ == '__main__':
 					if(float(num)!=0):
 						row_parts_all_zero = False
 						hm_x.append(sample_list[i-1])
+						print("hm x is ",sample_list[i-1])
 						hm_y.append(read_seq)
+						print("hm y is ",read_seq)
 						hm_values.append(num)
 					sample_frequencies.append(num)
 			# Only use rows with actual data in it
