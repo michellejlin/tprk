@@ -60,3 +60,6 @@ for (i in 1:(length(sample_names) - 1)) {
            path="./",plot=h1,width=5,height=4,units="in"))
   }
 }
+
+save.image(file = "Variable_region_compare.RData")
+

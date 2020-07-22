@@ -113,3 +113,5 @@ ggsave(paste(sample_name,"Illumina_vs_PacBio_lim0-10.pdf",sep="_"),path="./",plo
 
 file.exists("Rplots.pdf")
 file.remove("Rplots.pdf")
+
+save.image(file = "PacBio_v_Illumina_plots.RData")

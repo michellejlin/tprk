@@ -102,9 +102,7 @@ if __name__ == '__main__':
 					if(float(num)!=0):
 						row_parts_all_zero = False
 						hm_x.append(sample_list[i-1])
-						print("hm x is ",sample_list[i-1])
 						hm_y.append(read_seq)
-						print("hm y is ",read_seq)
 						hm_values.append(num)
 					sample_frequencies.append(num)
 			# Only use rows with actual data in it
@@ -160,11 +158,10 @@ if __name__ == '__main__':
 		hm.grid.grid_line_color = None
 		hm.axis.axis_line_color = None
 		hm.axis.major_tick_line_color = None
-		variable_region_hms.append(hm)
-
 		hm.background_fill_color = None
 		hm.border_fill_color = None
 
+		variable_region_hms.append(hm)
 
 	grid = gridplot(variable_region_figs, ncols=1)
 	output_file("all_variable_regions.html")
@@ -182,4 +179,4 @@ if __name__ == '__main__':
 	else:
 		grid2 = gridplot(variable_region_hms,ncols=1)
 		output_file("all_heatmap.html", title = "Heatmap")
-		save(variable_region_hms, sizing_mode = "scale_width")
+		save(grid2)

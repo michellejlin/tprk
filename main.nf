@@ -387,6 +387,7 @@ process createFrequencyPlots_PacBio {
       tuple val(sample_name), file("PB_${sample_name}.noprimers.filtered.RAD.nolines.fix_final_data_filtered.csv") into final_data_filtered_ch_pb
       file("*_RelativeFreqPlot*") into relative_freq_plot_pb
 
+
     script:
     """
     python3 ${SYPH_VISUALIZER} PB_${sample_name}.noprimers.filtered.RAD.nolines.fix_final_data.csv -t PB_${sample_name} -o ./
@@ -420,6 +421,7 @@ if (INPUT_TYPE == "both") {
 
         output:
         file("*.pdf") into pacbio_v_illumina_plots_ch
+        file("*.RData") into pacbio_v_illumina_plots_ch2
 
         script:
         """
@@ -448,6 +450,7 @@ if (INPUT_TYPE != "pacbio") {
 
         output:
         file("*.pdf") into variable_region_ch
+        file("*.RData") into variable_region_ch2
 
         script:
         """
