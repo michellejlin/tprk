@@ -7,12 +7,20 @@ list.of.packages <- c("treeio","ggtree","stringr","Biostrings","phylobase","pega
 suppressMessages(invisible(lapply(list.of.packages,library,character.only=T)))
 
 option_list <- list(make_option(c("-d", "--directory"), type="character", default=NULL, help="Specify working directory", metavar="character"),
+                    make_option(c("-r", "--relativefreq"), type="character", default=NULL, help="relative frequency cutoff", metavar="character"),
+                    make_option(c("-c", "--count"), type="character", default=NULL, help="count cutoff", metavar="character"),
                     make_option(c("-m", "--metadata"), type="character", default=NULL, help="Specify metadata", metavar="character"));
 opt_parser <- OptionParser(option_list=option_list);
 opt <- parse_args(opt_parser)
 
 #path <- opt$directory
 path <- "./"
+
+if (opt$relativefreq) {
+  rf_cutoff = as.numeric(opt$relativefreq)
+} else {
+  rf_cutoff = 0.2
+}
 #####
 
 ## To run this script manually in R, uncomment the following lines. You do not need to change the preceding lines of path and script.dir,
@@ -111,7 +119,7 @@ for (i in 1:length(PacBio_fns)) {
   df_aa$names <- paste(df_aa$sample,sapply(strsplit(as.character(df_aa$names), split="_"), "[", 2),df_aa$count,sep="_")
   df_aa <- df_aa[,c(2,1,3,4)]
   df_aa <- mutate(df_aa,percentage=round(count / sum(count)*100,3))
-  df_aa_filt <- filter(df_aa,percentage>=0.20)
+  df_aa_filt <- filter(df_aa,percentage>= rf_cutoff)
   df_aa_list[[i]] <- df_aa
   df_aa_filtered_list[[i]] <- df_aa_filt
   if (i == 1) {
