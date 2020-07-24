@@ -492,7 +492,7 @@ if (INPUT_TYPE != "illumina") {
 
         script:
         """
-        Rscript ${PACBIOTREE} -d . -m ${METADATA_FILE}
+        Rscript ${PACBIOTREE} -d . -m ${METADATA_FILE} -r ${params.RF_FILTER}
         """
     }
 }
