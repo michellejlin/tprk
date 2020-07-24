@@ -72,7 +72,7 @@ SYPH_VISUALIZER = file("${baseDir}/syph_visualizer.py")
 RAD_FREQUENCY = file("${baseDir}/RAD_Frequency.R")
 PACBIO_VS_ILLUMINA = file("${baseDir}/PacBio_v_Illumina_plots.R")
 VARIABLE_REGION_COMPARE = file("${baseDir}/Variable_region_compare.R")
-ALLDATA_VISUALIZER = file("${baseDir}/alldata_visualizer_alex.py")
+ALLDATA_VISUALIZER = file("${baseDir}/alldata_visualizer.py")
 PACBIOTREE = file("${baseDir}/PacBio2tree.R")
 
 /////////////////////////////

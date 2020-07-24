@@ -153,6 +153,7 @@ if __name__ == '__main__':
 			ticker=BasicTicker(desired_num_ticks=len(purd)),
 			formatter=PrintfTickFormatter(format="%d%%"),
 			label_standoff=6, border_line_color=None, location=(0, 0))
+		print("yo wtf",color_bar)
 		hm.add_layout(color_bar, 'right')
 		hm.xaxis.major_label_orientation = 1.0
 		hm.grid.grid_line_color = None
