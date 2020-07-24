@@ -333,71 +333,75 @@ process filterReads {
 // ////////////////////////////////////////////////////////
 // ////////////////////////////////////////////////////////
 
-// Filters allreads.csv based on set parameters and 
-// recalculates relative frequencies after filter.
-// Create relative frequency plots for Illumina samples. Default html.
-process createFrequencyPlots_Illumina {
-    container "quay.io/greninger-lab/tprk:latest"
+if (INPUT_TYPE != "pacbio") {
 
-	// Retry on fail at most three times 
-    // errorStrategy 'retry'
-    // maxRetries 3
+    // Filters allreads.csv based on set parameters and 
+    // recalculates relative frequencies after filter.
+    // Create relative frequency plots for Illumina samples. Default html.
+    process createFrequencyPlots_Illumina {
+        container "quay.io/greninger-lab/tprk:latest"
 
-    publishDir "${params.OUTDIR}/Figures/Relative_Frequency_Plots", mode: 'copy', pattern: '*_RelativeFreqPlot*'
+        // Retry on fail at most three times 
+        // errorStrategy 'retry'
+        // maxRetries 3
 
-    input:
-      file(FINAL_DATA) from final_data_ch_ill
-      file(SYPH_VISUALIZER)
-      file(FILTER_ALL_READS)
-      val(sample_name) from sample_name_ch
+        publishDir "${params.OUTDIR}/Figures/Relative_Frequency_Plots", mode: 'copy', pattern: '*_RelativeFreqPlot*'
 
-    output:
-      tuple val(sample_name), file("Ill_${sample_name}_final_data_filtered.csv") into final_data_filtered_ch_ill
-      file("*_RelativeFreqPlot*") into relative_freq_plot_ch_ill
+        input:
+        file(FINAL_DATA) from final_data_ch_ill
+        file(SYPH_VISUALIZER)
+        file(FILTER_ALL_READS)
+        val(sample_name) from sample_name_ch
 
-    script:
-    """
-    python3 ${SYPH_VISUALIZER} Ill_${sample_name}_final_data.csv -t Ill_${sample_name} -o ./
-    
-    python3 ${FILTER_ALL_READS} -f ${params.RF_FILTER} -c ${params.COUNT_FILTER} -a Ill_${sample_name}_final_data.csv
-    python3 ${SYPH_VISUALIZER} Ill_${sample_name}_final_data_filtered.csv -t Ill_${sample_name}_filtered -o ./
+        output:
+        tuple val(sample_name), file("Ill_${sample_name}_final_data_filtered.csv") into final_data_filtered_ch_ill
+        file("*_RelativeFreqPlot*") into relative_freq_plot_ch_ill
 
-    """
-    }
+        script:
+        """
+        python3 ${SYPH_VISUALIZER} Ill_${sample_name}_final_data.csv -t Ill_${sample_name} -o ./
+        
+        python3 ${FILTER_ALL_READS} -f ${params.RF_FILTER} -c ${params.COUNT_FILTER} -a Ill_${sample_name}_final_data.csv
+        python3 ${SYPH_VISUALIZER} Ill_${sample_name}_final_data_filtered.csv -t Ill_${sample_name}_filtered -o ./
 
-// Filters allreads.csv based on set parameters and 
-// recalculates relative frequencies after filter.
-// Create relative frequency plots for PacBio samples. Default html.
-process createFrequencyPlots_PacBio {
-    container "quay.io/greninger-lab/tprk:latest"
+        """
+        }
+}
 
-	// Retry on fail at most three times 
-    // errorStrategy 'retry'
-    // maxRetries 3
+if (INPUT_TYPE != "illumina") {
+    // Filters allreads.csv based on set parameters and 
+    // recalculates relative frequencies after filter.
+    // Create relative frequency plots for PacBio samples. Default html.
+    process createFrequencyPlots_PacBio {
+        container "quay.io/greninger-lab/tprk:latest"
 
-    publishDir "${params.OUTDIR}/Figures/Relative_Frequency_Plots", mode: 'copy', pattern: '*_RelativeFreqPlot*'
+        // Retry on fail at most three times 
+        // errorStrategy 'retry'
+        // maxRetries 3
 
-    input:
-      file(FINAL_DATA) from final_data_ch_pb
-      file(SYPH_VISUALIZER)
-      file(FILTER_ALL_READS)
-      val(sample_name) from pacbio_sample_name_ch
+        publishDir "${params.OUTDIR}/Figures/Relative_Frequency_Plots", mode: 'copy', pattern: '*_RelativeFreqPlot*'
 
-    output:
-      tuple val(sample_name), file("PB_${sample_name}.noprimers.filtered.RAD.nolines.fix_final_data_filtered.csv") into final_data_filtered_ch_pb
-      file("*_RelativeFreqPlot*") into relative_freq_plot_pb
+        input:
+        file(FINAL_DATA) from final_data_ch_pb
+        file(SYPH_VISUALIZER)
+        file(FILTER_ALL_READS)
+        val(sample_name) from pacbio_sample_name_ch
+
+        output:
+        tuple val(sample_name), file("PB_${sample_name}.noprimers.filtered.RAD.nolines.fix_final_data_filtered.csv") into final_data_filtered_ch_pb
+        file("*_RelativeFreqPlot*") into relative_freq_plot_pb
 
 
-    script:
-    """
-    python3 ${SYPH_VISUALIZER} PB_${sample_name}.noprimers.filtered.RAD.nolines.fix_final_data.csv -t PB_${sample_name} -o ./
-    
-    python3 ${FILTER_ALL_READS} -f ${params.RF_FILTER} -c ${params.COUNT_FILTER} -a PB_${sample_name}.noprimers.filtered.RAD.nolines.fix_final_data.csv
-    python3 ${SYPH_VISUALIZER} PB_${sample_name}.noprimers.filtered.RAD.nolines.fix_final_data_filtered.csv -t PB_${sample_name}_filtered -o ./
+        script:
+        """
+        python3 ${SYPH_VISUALIZER} PB_${sample_name}.noprimers.filtered.RAD.nolines.fix_final_data.csv -t PB_${sample_name} -o ./
+        
+        python3 ${FILTER_ALL_READS} -f ${params.RF_FILTER} -c ${params.COUNT_FILTER} -a PB_${sample_name}.noprimers.filtered.RAD.nolines.fix_final_data.csv
+        python3 ${SYPH_VISUALIZER} PB_${sample_name}.noprimers.filtered.RAD.nolines.fix_final_data_filtered.csv -t PB_${sample_name}_filtered -o ./
 
-    """
-    }
-
+        """
+        }
+}
 
 
 // Generates PacBio vs. Illumina scatterplots for each sample. Compares filtered and non-filtered side by side,
