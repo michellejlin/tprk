@@ -183,10 +183,6 @@ def make_table(strain_name, current_dir):
 	Vlist_of_dna = [V1_dna, V2_dna, V3_dna, V4_dna, V5_dna, V6_dna, V7_dna]
 	variable_regions = ["V1", "V2", "V3", "V4", "V5", "V6", "V7"]
 
-	# Get rid of stupidly long name in PacBio.
-	if "RAD" in strain_name:
-		strain_name = strain_name.split(".noprimers.filtered.RAD.nolines.fix.fasta")[0]
-
 	table = open(current_dir + "/" + strain_name + "_final_data.csv", "w+")
 	table2 = open(current_dir + "/over5count_" + strain_name + "_final_data_dna.csv", "w+")
 	table.write("Region,Read,RelativeFreq,Count" + "\n")
@@ -262,22 +258,34 @@ if __name__ == '__main__':
 
 	for file in os.listdir(current_dir):
 		if file.endswith(input_extension):
-			# Matches each read to a region and starts building a list.
-			find_region(file, input_format, is_pacbio, current_dir)
 			strain_name = file.split("." + input_format)[0]
-			# Builds the frequency final_table.csv for each file.
-			make_table(strain_name, current_dir)
-			V1_list = list()
-			V2_list = list()	
-			V3_list = list()	
-			V4_list = list()	
-			V5_list = list()	
-			V6_list = list()	
-			V7_list = list()
-			V1_dna = list()
-			V2_dna = list()
-			V3_dna = list()
-			V4_dna = list()
-			V5_dna = list()
-			V6_dna = list()
-			V7_dna = list()
+			# Get rid of stupidly long name in PacBio.
+			if "RAD" in strain_name:
+				strain_name = strain_name.split(".noprimers.filtered.RAD.nolines.fix.fasta")[0]
+			
+			file_tobemade = strain_name + "_final_data.csv"
+
+			print(file_tobemade)
+			# Checks if file exists already, and skips.
+			if os.path.isfile(file_tobemade):
+				print(file_tobemade," already exists. Skipping making frequency tables...")
+			else:
+				# Matches each read to a region and starts building a list.
+				find_region(file, input_format, is_pacbio, current_dir)
+				
+				# Builds the frequency final_table.csv for each file.
+				make_table(strain_name, current_dir)
+				V1_list = list()
+				V2_list = list()	
+				V3_list = list()	
+				V4_list = list()	
+				V5_list = list()	
+				V6_list = list()	
+				V7_list = list()
+				V1_dna = list()
+				V2_dna = list()
+				V3_dna = list()
+				V4_dna = list()
+				V5_dna = list()
+				V6_dna = list()
+				V7_dna = list()

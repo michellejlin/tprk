@@ -218,6 +218,7 @@ if(INPUT_TYPE != "illumina") {
             file(PACBIO_FILE) from pacbio_ch.collect()
             file(METADATA_FILE)
             file(COMPARE_DF)
+            file(SYPH_R)
         output:
             file("*final_data.csv") into pacbio_final_data_ch
             file("*final_data.csv") into final_data_ch_pb
@@ -272,6 +273,7 @@ if (INPUT_TYPE != "pacbio") {
             file("compare_pacbio_df.csv") from compare_pacbio_ch
             file(METADATA_FILE)
             file(COMPARE_DF)
+            file(SYPH_R)
         output:
             file("*final_data.csv") into illumina_final_data_ch
             file("*final_data.csv") into final_data_ch_ill

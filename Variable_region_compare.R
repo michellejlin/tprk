@@ -49,7 +49,7 @@ for (i in 1:(length(sample_names) - 1)) {
     sortedIllumina$Sample[sortedIllumina$Sample == rfcol] <- sample_names[i]
     sortedIllumina$Sample[sortedIllumina$Sample == rfcol2] <- sample_names[j]
     
-    myColors <- distinctColorPalette(1068)
+    myColors <- distinctColorPalette(length(sortedIllumina$Read))
     names(myColors) <- levels(sortedIllumina$Read)
     colScale <- scale_colour_manual(name = NULL, guide = FALSE, values = myColors)
     h <- ggplot(sortedIllumina[which(sortedIllumina$Frequency>0),]) + geom_point(aes(y = Frequency, x = Sample, color=Read)) + geom_line(aes(y = Frequency, x = Sample, group=Read, color=Read)) +  
