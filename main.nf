@@ -228,7 +228,7 @@ if(INPUT_TYPE != "illumina") {
         
         script:
         """
-        Rscript ${COMPARE_DF} -s ${baseDir} -m ${METADATA_FILE} -d ./ --pacbio
+        Rscript ${COMPARE_DF} -s ${SYPH_R} -m ${METADATA_FILE} -d ./ --pacbio
         """
     }
 }
@@ -282,7 +282,7 @@ if (INPUT_TYPE != "pacbio") {
         
         script:
         """
-        Rscript ${COMPARE_DF} -s ${baseDir} -m ${METADATA_FILE} -d ./ --illumina
+        Rscript ${COMPARE_DF} -s ${SYPH_R} -m ${METADATA_FILE} -d ./ --illumina
         """
     }
 }

@@ -37,7 +37,7 @@ metadata <- read.table(opt$metadata, sep=',', header=TRUE)
 PacBio_fns <- c(as.character(metadata$PacBio))
 Illumina_fns <- c(as.character(metadata$Illumina))
 sample_names <- c(as.character(metadata$SampleName))
-syph_path <- paste(script.dir,"/syph_r.py",sep='')
+syph_path <- opt$script_path
 
 noprimer_filenames <- paste(substr(basename(PacBio_fns),1,nchar(basename(PacBio_fns))-5),"noprimers.fastq",sep ='')
 nop <- file.path(noprimer_filenames)
