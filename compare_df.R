@@ -58,7 +58,9 @@ if(opt$illumina == FALSE) {
   print("Making PacBio frequency files...")
   # Calls syph_r to make the final_data.csv for each PacBio sample. Parallelized.
   foreach(i=1:length(RAD_files_fix)) %dopar% {
-    syphrPacBio_command <- paste("python3 ",syph_path," -i fasta -pacbio -d . -s ",RAD_files_fix[i],sep='')
+    PB_file_name <- substr(RAD_files_fix[i],1,nchar(RAD_files_fix[i])-3)
+    print(PB_file_name)
+    syphrPacBio_command <- paste("python3 ",syph_path," -i fasta -pacbio -d . -s ",PB_file_name,sep='')
     system(syphrPacBio_command)
   }
   
@@ -93,8 +95,9 @@ if (opt$pacbio == FALSE) {
   
   # Creates frequency files for Illumina (final_data.csvs). Parallelized.
   foreach(i=1:length(Illumina_fns)) %dopar% {
-    print(Illumina_fns[i])
-    syphrIllumina_command <- paste("python3 ",syph_path," -i fastq -illumina -d . -s ",Illumina_fns[i],sep='')
+    Illumina_file_name <- substr(Illumina_fns[i],1,nchar(Illumina_fns[i])-3)
+    print(Illumina_file_name)
+    syphrIllumina_command <- paste("python3 ",syph_path," -i fastq -illumina -d . -s ",Illumina_file_name,sep='')
     system(syphrIllumina_command)
   }
 
