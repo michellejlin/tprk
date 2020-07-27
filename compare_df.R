@@ -3,9 +3,6 @@ list.of.packages <- c("reticulate", "optparse", "ggplot2",
                       "reshape2", "optparse", "dada2", "ShortRead", "foreach", "iterators", "doParallel")
 lapply(list.of.packages,library,character.only = TRUE)
 
-# Specify number of cores for parallelizing frequency table creation
-registerDoParallel(cores=6)
-
 ##Specifying Illumina vs. PacBio files, and what the sample name is.
 option_list <- list(make_option(c("-s", "--script_path"), type="character", default=NULL, help="Directory where scripts are located.", 
                                 metavar="character"),
@@ -14,9 +11,15 @@ option_list <- list(make_option(c("-s", "--script_path"), type="character", defa
                     make_option(c("-p", "--pacbio"), type="character", default=FALSE, help="Specify if these files are only PacBio.", 
                                 metavar="character", action="store_true"),
                     make_option(c("-i", "--illumina"), type="character", default=FALSE, help="Specify if these files are only Illumina.", 
-                                metavar="character", action="store_true"));
+                                metavar="character", action="store_true"),
+                    make_option(c("-c", "--cpus"), type="character", default=FALSE, help="task.cpus", metavar="character"));
 opt_parser <- OptionParser(option_list=option_list);
 opt <- parse_args(opt_parser)
+
+cpus = opt$cpus
+num_cores <- strsplit(x, "[ gb]")[[1]][1]
+# Specify number of cores for parallelizing frequency table creation
+registerDoParallel(num_cores=6)
 
 path <- "./"
 script.dir <- opt$script_path
@@ -89,6 +92,7 @@ if (opt$pacbio == FALSE) {
   
   # Creates frequency files for Illumina (final_data.csvs). Parallelized.
   foreach(i=1:length(Illumina_fns)) %dopar% {
+    print(Illumina_fns[i])
     syphrIllumina_command <- paste("python3 ",syph_path," -i fastq -illumina -d ",Illumina_freq_path,"/ -s ",Illumina_fns[i],sep='')
     system(syphrIllumina_command)
   }
