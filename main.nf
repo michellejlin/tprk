@@ -202,6 +202,7 @@ if(INPUT_TYPE != "illumina") {
         
         script:
         """
+        gunzip *.gz
         Rscript ${RAD_FREQUENCY} -s ${baseDir} -d ${params.INPUT} -m ${METADATA_FILE} -a ${PACBIO_FILE}
         """
     }
@@ -228,6 +229,7 @@ if(INPUT_TYPE != "illumina") {
         
         script:
         """
+        gunzip *.gz
         Rscript ${COMPARE_DF} -s ${SYPH_R} -m ${METADATA_FILE} -d ./ --pacbio -c ${task.cpus}
         """
     }
@@ -282,6 +284,7 @@ if (INPUT_TYPE != "pacbio") {
         
         script:
         """
+        gunzip *.gz
         Rscript ${COMPARE_DF} -s ${SYPH_R} -m ${METADATA_FILE} -d ./ --illumina -c ${task.cpus}
         """
     }
