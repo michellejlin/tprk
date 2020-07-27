@@ -17,9 +17,10 @@ opt_parser <- OptionParser(option_list=option_list);
 opt <- parse_args(opt_parser)
 
 cpus = opt$cpus
-num_cores <- strsplit(x, "[ gb]")[[1]][1]
+num_cores <- strsplit(cpus, "[ gb]")[[1]][1]
+print(num_cores)
 # Specify number of cores for parallelizing frequency table creation
-registerDoParallel(num_cores=6)
+registerDoParallel(cores=num_cores)
 
 path <- "./"
 script.dir <- opt$script_path
