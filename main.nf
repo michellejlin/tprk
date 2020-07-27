@@ -267,9 +267,6 @@ if (INPUT_TYPE != "pacbio") {
         // errorStrategy 'retry'
         // maxRetries 3
 
-        cpus 4
-        memory '6 GB'
-
         input: 
             file(ILLUMINA_FILE) from illumina_ch.collect()
             file "all_assignments.csv" from all_assignments_ch1
