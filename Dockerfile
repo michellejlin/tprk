@@ -210,3 +210,6 @@ RUN cd /usr/local/ && \
     conda clean -afy
 
 RUN R -e "BiocManager::install('BiocGenerics')"
+RUN R -e "install.packages('foreach', repos='http://R-Forge.R-project.org')"
+RUN R -e "install.packages('iterators', repos='http://R-Forge.R-project.org')"
+RUN R -e "BiocManager::install('doParallel')"

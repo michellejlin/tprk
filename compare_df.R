@@ -1,7 +1,10 @@
 ## Load packages
 list.of.packages <- c("reticulate", "optparse", "ggplot2",
-                      "reshape2", "optparse", "dada2", "ShortRead")
+                      "reshape2", "optparse", "dada2", "ShortRead", "foreach", "iterators", "doParallel")
 lapply(list.of.packages,library,character.only = TRUE)
+
+# Specify number of cores for parallelizing frequency table creation
+registerDoParallel(cores=6)
 
 ##Specifying Illumina vs. PacBio files, and what the sample name is.
 option_list <- list(make_option(c("-s", "--script_path"), type="character", default=NULL, help="Directory where scripts are located.", 
@@ -49,11 +52,9 @@ if(opt$illumina == FALSE) {
   RAD_files_fix <- paste(substr(RAD_files,1,nchar(RAD_files)-5),"nolines.fix.fasta",sep ='')
   
   print("Making PacBio frequency files...")
-  # Calls syph_r to make the final_data.csv for each PacBio sample.
-  # TODO: right now this doesn't work if it's a repeat run because of previous .fastq files. Fix so you can rerun safely
-  # without having to delete stuff when rerunning.
-  for (num in c(1:length(RAD_files_fix))) {
-    syphrPacBio_command <- paste("python3 ",syph_path," -i fasta -pacbio -d ./",sep='')
+  # Calls syph_r to make the final_data.csv for each PacBio sample. Parallelized.
+  foreach(i=1:length(RAD_files_fix)) %dopar% {
+    syphrPacBio_command <- paste("python3 ",syph_path," -i fasta -pacbio -d . -s ",RAD_files_fix[i],sep='')
     system(syphrPacBio_command)
   }
   
@@ -84,11 +85,13 @@ if(opt$illumina == FALSE) {
 
 if (opt$pacbio == FALSE) {
   print("Making Illumina frequency files...")
-  Illumina_freq_path <- "./"
-
-  # Creates frequency files for Illumina (final_data.csvs).
-  syphrIllumina_command <- paste("python3 ",syph_path," -i fastq -illumina -d ",Illumina_freq_path,"/ ;",sep='')
-  system(syphrIllumina_command)
+  Illumina_freq_path <- "."
+  
+  # Creates frequency files for Illumina (final_data.csvs). Parallelized.
+  foreach(i=1:length(Illumina_fns)) %dopar% {
+    syphrIllumina_command <- paste("python3 ",syph_path," -i fastq -illumina -d ",Illumina_freq_path,"/ -s ",Illumina_fns[i],sep='')
+    system(syphrIllumina_command)
+  }
 
   print("Making Illumina comparison dataframe...")
 

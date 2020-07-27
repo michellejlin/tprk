@@ -215,6 +215,8 @@ if __name__ == '__main__':
 		'Do not use with -illumina') 
 	parser.add_argument('-illumina', action='store_true', help='Write this flag to specify this file is an illumina file. ' 
 		'Do not use with -pacbio')
+	parser.add_argument('-s', '--strain_name', required=True,
+		help='Specify what strain name.')
 	parser.add_argument('-d', '--directory', help='Pass directory (used when passed in from within R.')
 	
 	# Checks for argument sanity.
@@ -229,6 +231,7 @@ if __name__ == '__main__':
 	input_format = args.input_format.lower()
 	is_pacbio = args.pacbio
 	is_illumina = args.illumina
+	file_name = args.strain_name
 
 	# Right now the flag for input format is only to distinguish where the read name and read is.
 	# Generally, fasta files are in a chunk of 2, fastq in a chunk of 4.
@@ -256,36 +259,33 @@ if __name__ == '__main__':
 	if input_format == "fasta" and is_pacbio:
 		input_extension = "RAD.nolines.fix.fasta"
 
-	for file in os.listdir(current_dir):
-		if file.endswith(input_extension):
-			strain_name = file.split("." + input_format)[0]
-			# Get rid of stupidly long name in PacBio.
-			if "RAD" in strain_name:
-				strain_name = strain_name.split(".noprimers.filtered.RAD.nolines.fix.fasta")[0]
-			
-			file_tobemade = strain_name + "_final_data.csv"
-
-			print(file_tobemade)
-			# Checks if file exists already, and skips.
-			if os.path.isfile(file_tobemade):
-				print(file_tobemade," already exists. Skipping making frequency tables...")
-			else:
-				# Matches each read to a region and starts building a list.
-				find_region(file, input_format, is_pacbio, current_dir)
-				
-				# Builds the frequency final_table.csv for each file.
-				make_table(strain_name, current_dir)
-				V1_list = list()
-				V2_list = list()	
-				V3_list = list()	
-				V4_list = list()	
-				V5_list = list()	
-				V6_list = list()	
-				V7_list = list()
-				V1_dna = list()
-				V2_dna = list()
-				V3_dna = list()
-				V4_dna = list()
-				V5_dna = list()
-				V6_dna = list()
-				V7_dna = list()
+	# Extracts strain name from file name.
+	strain_name = file_name.split("." + input_format)[0]
+	# Get rid of stupidly long name in PacBio.
+	if "RAD" in strain_name:
+		strain_name = strain_name.split(".noprimers.filtered.RAD.nolines.fix.fasta")[0]
+	
+	# Checks if file exists already, and skips.
+	file_tobemade = strain_name + "_final_data.csv"
+	if os.path.isfile(file_tobemade):
+		print(file_tobemade," already exists. Skipping making frequency tables...")
+	else:
+		# Matches each read to a region and starts building a list.
+		find_region(file_name, input_format, is_pacbio, current_dir)
+		
+		# Builds the frequency final_table.csv for each file.
+		make_table(strain_name, current_dir)
+		V1_list = list()
+		V2_list = list()	
+		V3_list = list()	
+		V4_list = list()	
+		V5_list = list()	
+		V6_list = list()	
+		V7_list = list()
+		V1_dna = list()
+		V2_dna = list()
+		V3_dna = list()
+		V4_dna = list()
+		V5_dna = list()
+		V6_dna = list()
+		V7_dna = list()
