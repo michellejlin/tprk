@@ -46,14 +46,14 @@ Illumina_fns <- c(as.character(metadata$Illumina))
 sample_names <- c(as.character(metadata$SampleName))
 syph_path <- opt$script_path
 
-noprimer_filenames <- paste(substr(basename(PacBio_fns),1,nchar(basename(PacBio_fns))-5),"noprimers.fastq",sep ='')
+noprimer_filenames <- paste(substr(basename(PacBio_fns),1,nchar(basename(PacBio_fns))-8),"noprimers.fastq",sep ='')
 nop <- file.path(noprimer_filenames)
 
 if(opt$illumina == FALSE) {
-  RAD_filenames <- paste(substr(basename(PacBio_fns),1,nchar(basename(PacBio_fns))-5),"noprimers.filtered.RAD.fasta",sep ='')
+  RAD_filenames <- paste(substr(basename(PacBio_fns),1,nchar(basename(PacBio_fns))-8),"noprimers.filtered.RAD.fasta",sep ='')
   RAD_files <- file.path(RAD_filenames)
-  RAD_files_nolines <- paste(substr(RAD_files,1,nchar(RAD_files)-5),"nolines.fasta",sep ='')
-  RAD_files_fix <- paste(substr(RAD_files,1,nchar(RAD_files)-5),"nolines.fix.fasta",sep ='')
+  RAD_files_nolines <- paste(substr(RAD_files,1,nchar(RAD_files)-8),"nolines.fasta",sep ='')
+  RAD_files_fix <- paste(substr(RAD_files,1,nchar(RAD_files)-8),"nolines.fix.fasta",sep ='')
   
   print("Making PacBio frequency files...")
   # Calls syph_r to make the final_data.csv for each PacBio sample. Parallelized.
