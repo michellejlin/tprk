@@ -12,6 +12,7 @@ from bokeh.models import ColumnDataSource, LabelSet, ColorBar, BasicTicker, Prin
 from bokeh.models.widgets import Panel, Paragraph, Div
 from bokeh.layouts import gridplot, column, layout, widgetbox, row
 from bokeh.transform import transform
+from math import pi
 import subprocess
 import os
 
@@ -199,7 +200,8 @@ if __name__ == '__main__':
 		hm_yaxis = []
 
 		fig = figure(x_range = sample_list, y_range = (0,105), tools = "hover", tooltips = "$name",
-			plot_height = 1000, plot_width = 1600, title = variable_region, toolbar_location = None)
+			plot_height = 900, plot_width = 1500, min_border_left = 200,
+			title = variable_region, toolbar_location = None, sizing_mode = "scale_width")
 		data = {'samples': sample_list}
 		configure_plot(fig, sample_list, sample_xaxis)
 		for index, row in region_df.iterrows():
@@ -227,6 +229,9 @@ if __name__ == '__main__':
 			)
 		variable_region_figs.append(fig)
 
+		# Rotate x-axis labels
+		fig.xaxis.major_label_orientation = pi/4
+
 		df2 = pd.DataFrame()
 		df2['x']=hm_x
 		df2['y']=hm_y
@@ -248,15 +253,20 @@ if __name__ == '__main__':
 			brew_pal = purd 
 		# Reverse the colors so darker colors at max
 		brew_pal = brew_pal[::-1]
-		mapper = LinearColorMapper(palette=brew_pal, low=2, high=100, low_color = "#ffffff")
+		mapper = LinearColorMapper(palette=brew_pal, low=2, high=100, low_color = "#ededed")
 
-		hm = figure(x_range=sample_list, y_range=sample_reads, title = variable_region, 
+		hm = figure(
+			x_range=sample_list, y_range=sample_reads, title = variable_region, 
 			toolbar_location = None, x_axis_location = "above", #background_fill_color = "#d3d3d3",
-			plot_height = (len(sample_reads)*20), 
-			#plot_width = (len(sample_list)*25) + (len(max(sample_reads, key = len)) * 8),
+			#plot_height = (len(sample_reads)*20), 
+			plot_height = 300,
+			plot_width = (len(sample_list)*25) + (len(max(sample_reads, key = len)) * 8),
+			#plot_height = 500,
+			#aspect_scale = 1, match_aspect = True,
+			#sizing_mode = "scale_both",
 			min_border_right = 80,
 			y_axis_location = "left",
-			tooltips=[('Read','@y'),('Strain','@x'),('Frequency','@values')])
+			tooltips=[('Read','@y'),('Strain','@x'),('Frequency','@values'+"%")])
 		hm.rect(x='x', y='y', width = 1, height = 1, source=source,
 			line_color=None, fill_color=transform('values', mapper), hover_line_color = 'black',
 			hover_color = transform('values',mapper))
