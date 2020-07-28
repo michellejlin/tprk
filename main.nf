@@ -358,6 +358,7 @@ if (INPUT_TYPE != "pacbio") {
         file(FILTER_ALL_READS)
         val(sample_name) from sample_name_ch
         file(RECALCULATE_FREQUENCY)
+        file(METADATA_FILE)
 
         output:
         tuple val(sample_name), file("Ill_${sample_name}_final_data_filtered.csv") into final_data_filtered_ch_ill
@@ -392,6 +393,7 @@ if (INPUT_TYPE != "illumina") {
         file(FINAL_DATA) from final_data_ch_pb
         file(SYPH_VISUALIZER)
         file(FILTER_ALL_READS)
+        file(METADATA_FILE)
         file(RECALCULATE_FREQUENCY)
         val(sample_name) from pacbio_sample_name_ch
 
