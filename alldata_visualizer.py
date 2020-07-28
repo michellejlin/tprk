@@ -266,4 +266,4 @@ if __name__ == '__main__':
 
   grid2 = gridplot(variable_region_hms,ncols=1)
   output_file("all_heatmap.html", title = "Heatmap")
-  save(variable_region_hms, sizing_mode = "scale_width")
+  save(grid2, sizing_mode = "scale_width")

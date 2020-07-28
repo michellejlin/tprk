@@ -24,7 +24,7 @@ Put the following things in one folder:
     - This file should be placed in the same folder as your files to be analyzed.
     - There MUST be a newline character at the end of this file to be read as a valid csv. Simply hit enter in the last row to ensure there is a valid new line.
     - If running just Illumina or just PacBio, simply leave those columns blank (but make sure to have commas as appropriate).
-    - An example metadata file is provided. The general format of the metadata file should be three columns, separated by commas, as shown:
+    - Example metadata files (for both, just Illumina, and just PacBio) are provided in the `example/` folder. The general format of the metadata file should be three columns, separated by commas, as shown:
 
 | SampleName  | Illumina  | PacBio |
 | ------------- | ------------- | ------------- |
@@ -34,7 +34,7 @@ Put the following things in one folder:
 - Example command for just Illumina files in current directory on a laptop without many CPUs: ```nextflow run michellejlin/tprk -r nextflow --INPUT ./ --OUTDIR output/ --ILLUMINA --METADATA metadata.csv -resume -with-docker ubuntu:18.04 -with-trace -profile laptop```
 - Example command for comparing PacBio and Illumina files with specified cutoffs on the cloud: ```nextflow run michellejlin/tprk -r nextflow --INPUT example/ --OUTDIR example/output/ --METADATA metadata.csv -resume -with-docker ubuntu:18.04 -with-trace -c ~/nextflow.covid.config -profile Cloud ```
 
-For a list of arguments, you can also run ```nextflow run michellejlin/tprk -r nextflow -h``` .
+For a list of arguments, you can also run ```nextflow run michellejlin/tprk -r nextflow --help``` .
 
 | Command  | Description |
 | ---      | ---         | 

@@ -236,7 +236,7 @@ if __name__ == '__main__':
 	# Right now the flag for input format is only to distinguish where the read name and read is.
 	# Generally, fasta files are in a chunk of 2, fastq in a chunk of 4.
 	if input_format in ["fasta", "fastq"]:
-		print("Input format is " + input_format + ". Reading all " + input_format + " files in this folder. ")
+		print("Input format is " + input_format + ".")
 	else:
 		print("ERROR: Please specify either fasta or fastq for -i.")
 		sys.exit()
@@ -270,6 +270,7 @@ if __name__ == '__main__':
 	if os.path.isfile(file_tobemade):
 		print(file_tobemade," already exists. Skipping making frequency tables...")
 	else:
+		print(file_tobemade,"")
 		# Matches each read to a region and starts building a list.
 		find_region(file_name, input_format, is_pacbio, current_dir)
 		
