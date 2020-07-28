@@ -32,7 +32,7 @@ allreads_filtered <- paste(path,"/allreads_filtered.csv", sep="")
 metadata <- read.table(opt$metadata, sep=',', header=TRUE)
 sample_names = as.character(metadata$SampleName)
   
-alldata <- read.csv(allreads,header=TRUE,sep=",",stringsAsFactors = FALSE)
+alldata <- read.csv(allreads_filtered,header=TRUE,sep=",",stringsAsFactors = FALSE)
 
 # Loops through and generates variable region comparisons for all the combinations of files.
 # This means a lot of files if list is long.

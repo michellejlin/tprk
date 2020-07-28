@@ -121,16 +121,17 @@ if (opt$pacbio == FALSE) {
     compare_Illumina_df_out <- paste("compare_illumina_df.csv", sep='')
     write.csv(compare_Illumina_df,file=compare_Illumina_df_out,row.names=FALSE,quote=FALSE)
     
+    # If there are any PacBio files, then compare_pacbio_df.csv should have been made, and we merge with compare_illumina_df to obtain allreads.csv.
+    # Otherwise, we copy compare_illumina_df for allreads.csv.
     if(file.size("compare_pacbio_df.csv")>0) {
-        print("compare_pacbio_df.csv is empty, using compare_illumina_df as allreads.csv...")
-        allreads <- merge(compare_Illumina_df,read.csv("compare_pacbio_df.csv"),all=T)
+        allreads <- merge(compare_Illumina_df,read.csv("compare_pacbio_df.csv", check.names=FALSE),all=T)
+        print("Making allreads.csv...")
+        allreads_out <- paste("allreads.csv",sep='')
+        write.csv(allreads,file=allreads_out,row.names=FALSE,quote=FALSE)
     } else {
+        print("compare_pacbio_df.csv is empty, using compare_illumina_df as allreads.csv...")
         allreads <- compare_Illumina_df
+        system("cp compare_illumina_df.csv allreads.csv")
     }
-    print("Making allreads.csv...")
-    allreads_out <- paste("allreads.csv",sep='')
-    write.csv(allreads,file=allreads_out,row.names=FALSE,quote=FALSE)
-    } 
-  } else {
-  print("Pacbio option specified. Skipping making Illumina frequency comparison files.")
+  }
 }
