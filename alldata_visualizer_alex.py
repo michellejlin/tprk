@@ -259,12 +259,13 @@ if __name__ == '__main__':
 			x_range=sample_list, y_range=sample_reads, title = variable_region, 
 			toolbar_location = None, x_axis_location = "above", #background_fill_color = "#d3d3d3",
 			#plot_height = (len(sample_reads)*20), 
-			plot_height = 300,
+			plot_height = 350,
 			plot_width = (len(sample_list)*25) + (len(max(sample_reads, key = len)) * 8),
 			#plot_height = 500,
 			#aspect_scale = 1, match_aspect = True,
 			#sizing_mode = "scale_both",
 			min_border_right = 80,
+			min_border_bottom = 80,
 			y_axis_location = "left",
 			tooltips=[('Read','@y'),('Strain','@x'),('Frequency','@values'+"%")])
 		hm.rect(x='x', y='y', width = 1, height = 1, source=source,
@@ -281,6 +282,7 @@ if __name__ == '__main__':
 		hm.axis.major_tick_line_color = None
 		hm.background_fill_color = None
 		hm.border_fill_color = None
+		hm.title.text_font_size = "16pt"
 
 		variable_region_hms.append(hm)
 
