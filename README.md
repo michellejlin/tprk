@@ -23,6 +23,7 @@ Put the following things in one folder:
 - **Metadata file.** This should be a .csv with three columns: SampleName, PacBio, Illumina, shown in the table below. Make sure to include absolute paths to PacBio and Illumina files!
     - This file should be placed in the same folder as your files to be analyzed.
     - There MUST be a newline character at the end of this file to be read as a valid csv. Simply hit enter in the last row to ensure there is a valid new line.
+    - Ensure that there are no special characters, including hyphens! Underscores are okay.
     - If running just Illumina or just PacBio, simply leave those columns blank (but make sure to have commas as appropriate).
     - Example metadata files (for both, just Illumina, and just PacBio) are provided in the `example/` folder. The general format of the metadata file should be three columns, separated by commas, as shown:
 
