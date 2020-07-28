@@ -319,7 +319,7 @@ process filterReads {
     """
     # Creates allreads_filtered.csv and recalculates the relative frequencies.
     python3 ${FILTER_ALL_READS} -f ${params.RF_FILTER} -c ${params.COUNT_FILTER} -a "allreads.csv"
-    Rscript ${RECALCULATE_FREQUENCY} -f "allreads.csv" -m ${METADATA_FILE}
+    Rscript ${RECALCULATE_FREQUENCY} -f "allreads_filtered.csv" -m ${METADATA_FILE}
     
     # Creates allreads_filtered_heatmap.csv and recalculates the relative frequencies. This csv includes samples under the count/relative freq filters
 	# if another sample shares the same read. 
@@ -407,7 +407,7 @@ if (INPUT_TYPE != "illumina") {
         python3 ${SYPH_VISUALIZER} PB_${sample_name}.noprimers.filtered.RAD.nolines.fix_final_data.csv -t PB_${sample_name} -o ./
         
         python3 ${FILTER_ALL_READS} -f ${params.RF_FILTER} -c ${params.COUNT_FILTER} -a PB_${sample_name}.noprimers.filtered.RAD.nolines.fix_final_data.csv
-        Rscript ${RECALCULATE_FREQUENCY} -f .noprimers.filtered.RAD.nolines.fix_final_data_filtered.csv -m ${METADATA_FILE}
+        Rscript ${RECALCULATE_FREQUENCY} -f PB_${sample_name}.noprimers.filtered.RAD.nolines.fix_final_data_filtered.csv -m ${METADATA_FILE}
         python3 ${SYPH_VISUALIZER} PB_${sample_name}.noprimers.filtered.RAD.nolines.fix_final_data_filtered.csv -t PB_${sample_name}_filtered -o ./
 
         """
