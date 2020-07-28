@@ -189,8 +189,8 @@ if(INPUT_TYPE != "illumina") {
         container "quay.io/greninger-lab/tprk"
 
         // Retry on fail at most three times 
-        // errorStrategy 'retry'
-        // maxRetries 3
+        errorStrategy 'retry'
+        maxRetries 3
 
         input: 
             tuple val(sample_name), file(PACBIO_FILE) from input_pacbio_ch
@@ -203,7 +203,7 @@ if(INPUT_TYPE != "illumina") {
         script:
         """
         gunzip -d --force *.gz
-        Rscript ${RAD_FREQUENCY} -s ${baseDir} -d ${params.INPUT} -m ${METADATA_FILE} -a ${PACBIO_FILE}
+        Rscript ${RAD_FREQUENCY} -s ${baseDir} -d ${params.INPUT} -m ${METADATA_FILE} -a ${PACBIO_FILE} -c ${task.cpus}
         """
     }
 
@@ -212,8 +212,8 @@ if(INPUT_TYPE != "illumina") {
     container "quay.io/greninger-lab/tprk:latest"
 
         // Retry on fail at most three times 
-        // errorStrategy 'retry'
-        // maxRetries 3
+        errorStrategy 'retry'
+        maxRetries 3
 
         input: 
             file(PACBIO_FILE) from pacbio_ch.collect()
@@ -266,8 +266,8 @@ if (INPUT_TYPE != "pacbio") {
     container "quay.io/greninger-lab/tprk:latest"
 
         // Retry on fail at most three times 
-        // errorStrategy 'retry'
-        // maxRetries 3
+        errorStrategy 'retry'
+        maxRetries 3
 
         input: 
             file(ILLUMINA_FILE) from illumina_ch.collect()
@@ -300,8 +300,8 @@ process filterReads {
     container "quay.io/greninger-lab/tprk:latest"
 
 	// Retry on fail at most three times 
-    // errorStrategy 'retry'
-    // maxRetries 3
+    errorStrategy 'retry'
+    maxRetries 3
 
     publishDir params.OUTDIR, mode: 'copy'
 
@@ -347,8 +347,8 @@ if (INPUT_TYPE != "pacbio") {
         container "quay.io/greninger-lab/tprk:latest"
 
         // Retry on fail at most three times 
-        // errorStrategy 'retry'
-        // maxRetries 3
+        errorStrategy 'retry'
+        maxRetries 3
 
         publishDir "${params.OUTDIR}/Figures/Relative_Frequency_Plots", mode: 'copy', pattern: '*_RelativeFreqPlot*'
 
@@ -384,8 +384,8 @@ if (INPUT_TYPE != "illumina") {
         container "quay.io/greninger-lab/tprk:latest"
 
         // Retry on fail at most three times 
-        // errorStrategy 'retry'
-        // maxRetries 3
+        errorStrategy 'retry'
+        maxRetries 3
 
         publishDir "${params.OUTDIR}/Figures/Relative_Frequency_Plots", mode: 'copy', pattern: '*_RelativeFreqPlot*'
 
@@ -423,8 +423,8 @@ if (INPUT_TYPE == "both") {
         container "quay.io/greninger-lab/tprk:latest"
 
         // Retry on fail at most three times 
-        // errorStrategy 'retry'
-        // maxRetries 3
+        errorStrategy 'retry'
+        maxRetries 3
 
         publishDir "${params.OUTDIR}Figures/PacBio_vs_Illumina_Plots", mode: 'copy'
 
@@ -452,8 +452,8 @@ if (INPUT_TYPE != "pacbio") {
         container "quay.io/greninger-lab/tprk:latest"
 
         // Retry on fail at most three times 
-        // errorStrategy 'retry'
-        // maxRetries 3
+        errorStrategy 'retry'
+        maxRetries 3
 
         publishDir "${params.OUTDIR}Figures/Variable_Region_Comparisons", mode: 'copy'
 
@@ -469,7 +469,7 @@ if (INPUT_TYPE != "pacbio") {
 
         script:
         """
-        Rscript ${VARIABLE_REGION_COMPARE} -d ./ -m ${METADATA_FILE}
+        Rscript ${VARIABLE_REGION_COMPARE} -d ./ -m ${METADATA_FILE} -c ${task.cpus}
         """
     }
 }
@@ -484,8 +484,8 @@ if (INPUT_TYPE != "illumina") {
         container "quay.io/greninger-lab/tprk:latest"
 
         // Retry on fail at most three times 
-        // errorStrategy 'retry'
-        // maxRetries 3
+        errorStrategy 'retry'
+        maxRetries 3
 
         publishDir "${params.OUTDIR}Figures/Tree", mode: 'copy'
 
@@ -514,8 +514,8 @@ process visualizeAllData {
         container "quay.io/greninger-lab/tprk:latest"
 
         // Retry on fail at most three times 
-        // errorStrategy 'retry'
-        // maxRetries 3
+        errorStrategy 'retry'
+        maxRetries 3
 
         publishDir "${params.OUTDIR}Figures", mode: 'copy'
 

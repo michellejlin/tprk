@@ -2,16 +2,23 @@
 # Currently takes the path and goes through the allreads.csv.
 
 list.of.packages <- c("ggplot2", "grid", "nplr", "plyr", "dplyr", "scales", "gridExtra", "RColorBrewer", "optparse","randomcoloR", "cowplot",
-                      "tidyr", "tibble")
+                      "tidyr", "tibble", "foreach","iterators","doParallel")
 lapply(list.of.packages,library,character.only=T)
 
 option_list <- list(make_option(c("-d", "--directory"), type="character", default=NULL, help="Specify working directory", metavar="character"),
+                    make_option(c("-c", "--cpus"), type="character", default=FALSE, help="task.cpus", metavar="character"),
                     make_option(c("-m", "--metadata"), type="character", default=NULL, help="Specify metadata", metavar="character"));
 opt_parser <- OptionParser(option_list=option_list);
 opt <- parse_args(opt_parser)
 
 #path <- opt$directory
 path <- "."
+
+cpus = opt$cpus
+num_cores <- strsplit(cpus, "[ gb]")[[1]][1]
+print(num_cores)
+# Specify number of cores for parallelizing frequency table creation
+registerDoParallel(cores=num_cores)
 
 #####
 
@@ -37,7 +44,7 @@ alldata <- read.csv(allreads_filtered,header=TRUE,sep=",",stringsAsFactors = FAL
 # Loops through and generates variable region comparisons for all the combinations of files.
 # This means a lot of files if list is long.
 for (i in 1:(length(sample_names) - 1)) {
-  for (j in (i+1):(length(sample_names))) {
+  foreach(j=i+1:(length(sample_names))) %dopar% {
     print(paste("Generating figure for ",sample_names[i]," and ",sample_names[j],"...",sep=""))
     rfcol <- paste("Ill_",sample_names[i],"_RelativeFreq",sep = "")
     rfcol2 <- paste("Ill_",sample_names[j],"_RelativeFreq",sep = "")
