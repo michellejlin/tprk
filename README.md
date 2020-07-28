@@ -33,7 +33,7 @@ Put the following things in one folder:
 
 ## Usage
 - Example command for just Illumina files in current directory on a laptop without many CPUs: ```nextflow run michellejlin/tprk -r nextflow --INPUT ./ --OUTDIR output/ --ILLUMINA --METADATA metadata.csv -resume -with-docker ubuntu:18.04 -with-trace -profile laptop```
-- Example command for comparing PacBio and Illumina files with specified cutoffs on the cloud: ```nextflow run michellejlin/tprk -r nextflow --INPUT example/ --OUTDIR example/output/ --METADATA metadata.csv -resume -with-docker ubuntu:18.04 -with-trace -c ~/nextflow.covid.config -profile Cloud ```
+- Example command for comparing PacBio and Illumina files with specified cutoffs on the cloud: ```AWS_PROFILE=covid nextflow run michellejlin/tprk -r nextflow --INPUT example/ --OUTDIR example/output/ --METADATA metadata.csv -resume -with-docker ubuntu:18.04 -with-trace -c ~/nextflow.covid.config -profile Cloud```
 
 For a list of arguments, you can also run ```nextflow run michellejlin/tprk -r nextflow --help``` .
 

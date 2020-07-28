@@ -1,11 +1,12 @@
 ## Load packages
 list.of.packages <- c("JuliaCall", "reticulate", "optparse", "ggplot2",
-                      "reshape2", "optparse", "dada2", "ShortRead")
+                      "reshape2", "optparse", "dada2", "ShortRead", "foreach", "iterators", "doParallel")
 lapply(list.of.packages,library,character.only = TRUE)
 
 ##Specifying Illumina vs. PacBio files, and what the sample name is.
 option_list <- list(make_option(c("-s", "--script_path"), type="character", default=NULL, help="Directory where scripts are located.", 
                                 metavar="character"),
+                    make_option(c("-c", "--cpus"), type="character", default=FALSE, help="task.cpus", metavar="character"),
                     make_option(c("-d", "--directory"), type="character", default=NULL, help="Specify working directory", metavar="character"),
                     make_option(c("-m", "--metadata"), type="character", default=NULL, help="Specify metadata", metavar="character"),
                     make_option(c("-a", "--pacbio_sample"), type="character", default=NULL, help="Specify PacBio file to run."), 
@@ -16,6 +17,12 @@ option_list <- list(make_option(c("-s", "--script_path"), type="character", defa
                                 metavar="character", action="store_true"));
 opt_parser <- OptionParser(option_list=option_list);
 opt <- parse_args(opt_parser)
+
+cpus = opt$cpus
+num_cores <- strsplit(cpus, "[ gb]")[[1]][1]
+print(num_cores)
+# Specify number of cores for parallelizing frequency table creation
+registerDoParallel(cores=num_cores)
 
 path <- opt$directory
 script.dir <- opt$script_path
@@ -48,7 +55,7 @@ if(opt$illumina == FALSE) {
   ## Points to Julia install in docker "quay.io/greninger-lab/tprk"
   julia <- julia_setup(JULIA_HOME = "/usr/local/julia/bin")
   ## Remove primers
-  for (count in c(1:length(nop))) {
+  foreach(count=1:length(nop)) %dopar% {
     if(file.exists(nop[count])) {
       print(paste(noprimer_filenames[count], " already exists. Skipping removing primers step...", sep=""))
     } else {
@@ -67,7 +74,7 @@ if(opt$illumina == FALSE) {
   filtEE1 <- file.path(filterEE1_filenames)
   
   ## Filter reads for tprK length and do not worry about expected errors.
-  for (count in c(1:length(filt))) {
+  foreach(count=1:length(filt)) {
     if (file.exists(filt[count])) {
       print(paste(filter_filenames[count]," already exists. Skipping filtering step..."), sep="")
     } else {
@@ -90,7 +97,7 @@ if(opt$illumina == FALSE) {
   
      
   ## Build RAD files for each PacBio sample. This step takes forever!!!
-  for (count in c(1:length(filt))) {
+  foreach(count=1:length(filt)) {
     to_rad_name <- paste(RAD_filenames[count])
     # Skips RAD step if files already exist, because it takes forever.
     if(file.exists(to_rad_name)) {
