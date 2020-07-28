@@ -17,8 +17,8 @@ This pipeline was designed to take Illumina and PacBio files straight off the se
 ## Input Files
 Put the following things in one folder:
 - **All the sequence files to run analysis on**
-    - PacBio Q20 reads
-    - Single-end Illumina reads trimmed and run through Trimmomatic
+    - PacBio Q20 reads, gzipped
+    - Single-end Illumina reads trimmed and run through Trimmomatic, gzipped
     - By default the pipeline expects both PacBio and Illumina files for every sample. Running the pipeline with just PacBio or just Illumina files is possible with the `--pacbio` and `--illumina` flags respectively. However, some plots require both files to be generated and these plots will not be output.
 - **Metadata file.** This should be a .csv with three columns: SampleName, PacBio, Illumina, shown in the table below. Make sure to include absolute paths to PacBio and Illumina files!
     - This file should be placed in the same folder as your files to be analyzed.
@@ -28,7 +28,7 @@ Put the following things in one folder:
 
 | SampleName  | Illumina  | PacBio |
 | ------------- | ------------- | ------------- |
-| This will largely be the name used for generating tables and plots. | Should be in format Ill_[sample name].fastq. The Illumina file specified for the sample name. This must match exactly the name of the matching file in the folder. This should be a trimmed file run through Trimmomatic. | Should be in format PB_[sample name].fasta. The PacBio file specified for the sample name. This must match exactly the name of the matching file in the folder. This should be a Q20 file.  | 
+| This will largely be the name used for generating tables and plots. | Should be in format Ill_[sample name].fastq.gz. The Illumina file specified for the sample name. This must match exactly the name of the matching file in the folder. This should be a trimmed file run through Trimmomatic. | Should be in format PB_[sample name].fasta.gz. The PacBio file specified for the sample name. This must match exactly the name of the matching file in the folder. This should be a Q20 file.  | 
 
 ## Usage
 - Example command for just Illumina files in current directory on a laptop without many CPUs: ```nextflow run michellejlin/tprk -r nextflow --INPUT ./ --OUTDIR output/ --ILLUMINA --METADATA metadata.csv -resume -with-docker ubuntu:18.04 -with-trace -profile laptop```

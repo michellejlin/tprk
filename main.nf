@@ -357,6 +357,7 @@ if (INPUT_TYPE != "pacbio") {
         file(SYPH_VISUALIZER)
         file(FILTER_ALL_READS)
         val(sample_name) from sample_name_ch
+        file(RECALCULATE_FREQUENCY)
 
         output:
         tuple val(sample_name), file("Ill_${sample_name}_final_data_filtered.csv") into final_data_filtered_ch_ill
@@ -367,6 +368,7 @@ if (INPUT_TYPE != "pacbio") {
         python3 ${SYPH_VISUALIZER} Ill_${sample_name}_final_data.csv -t Ill_${sample_name} -o ./
         
         python3 ${FILTER_ALL_READS} -f ${params.RF_FILTER} -c ${params.COUNT_FILTER} -a Ill_${sample_name}_final_data.csv
+        Rscript ${RECALCULATE_FREQUENCY} -f Ill_${sample_name}_final_data_filtered.csv -m ${METADATA_FILE}
         python3 ${SYPH_VISUALIZER} Ill_${sample_name}_final_data_filtered.csv -t Ill_${sample_name}_filtered -o ./
 
         """
@@ -390,6 +392,7 @@ if (INPUT_TYPE != "illumina") {
         file(FINAL_DATA) from final_data_ch_pb
         file(SYPH_VISUALIZER)
         file(FILTER_ALL_READS)
+        file(RECALCULATE_FREQUENCY)
         val(sample_name) from pacbio_sample_name_ch
 
         output:
@@ -402,6 +405,7 @@ if (INPUT_TYPE != "illumina") {
         python3 ${SYPH_VISUALIZER} PB_${sample_name}.noprimers.filtered.RAD.nolines.fix_final_data.csv -t PB_${sample_name} -o ./
         
         python3 ${FILTER_ALL_READS} -f ${params.RF_FILTER} -c ${params.COUNT_FILTER} -a PB_${sample_name}.noprimers.filtered.RAD.nolines.fix_final_data.csv
+        Rscript ${RECALCULATE_FREQUENCY} -f .noprimers.filtered.RAD.nolines.fix_final_data_filtered.csv -m ${METADATA_FILE}
         python3 ${SYPH_VISUALIZER} PB_${sample_name}.noprimers.filtered.RAD.nolines.fix_final_data_filtered.csv -t PB_${sample_name}_filtered -o ./
 
         """
