@@ -33,7 +33,7 @@ Put the following things in one folder:
 
 ## Usage
 - Example command for just Illumina files in current directory on a laptop without many CPUs: ```nextflow run michellejlin/tprk -r nextflow --INPUT ./ --OUTDIR output/ --ILLUMINA --METADATA metadata.csv -resume -with-docker ubuntu:18.04 -with-trace -profile laptop```
-- Example command for comparing PacBio and Illumina files with specified cutoffs on the cloud: ```AWS_PROFILE=covid nextflow run michellejlin/tprk -r nextflow --INPUT example/ --OUTDIR example/output/ --METADATA metadata.csv -resume -with-docker ubuntu:18.04 -with-trace -c ~/nextflow.covid.config -profile Cloud```
+- Example command for comparing PacBio and Illumina files with specified cutoffs on the cloud with a large dataset: ```AWS_PROFILE=covid nextflow run michellejlin/tprk -r nextflow --INPUT example/ --OUTDIR example/output/ --METADATA metadata.csv --LARGE -resume -with-docker ubuntu:18.04 -with-trace -c ~/nextflow.covid.config -profile Cloud```
 
 For a list of arguments, you can also run ```nextflow run michellejlin/tprk -r nextflow --help``` .
 
@@ -44,6 +44,7 @@ For a list of arguments, you can also run ```nextflow run michellejlin/tprk -r n
 | --METADATA | Path to metadata file with specific format. 
 | --PACBIO | Specify that there are only PacBio files to be read.
 | --ILLUMINA | Specify that there are only Illumina files to be read.
+| --LARGE | Specify that this is a large dataset. Splitting of visualizations will be done.
 |--RF_FILTER | Specify relative frequency filter. Default is 0.2.
 |--COUNT_FILTER | Specify count filter. Default is 5.
 |--ILLUMINA_FILTER | Specify whether PacBio reads should be filtered to only include files supported by Illumina reads that reach the cutoff.

@@ -21,6 +21,7 @@ def helpMessage() {
                         Comparison figures to Illumina will not be generated.
         --ILLUMINA      Write this flag to specify that there are only Illumina files here.
                         Comparison figures to PacBio will not be generated.
+        --LARGE         For very large datasets. Will not generate comparisons between files and will output htmls for variable regions separately.
     
     Filtering Options
         --RF_FILTER         Optional flag for specifying what relative frequency
@@ -59,6 +60,7 @@ params.ILLUMINA_FILTER = false
 params.PACBIO = false
 params.ILLUMINA = false
 params.METADATA = false
+params.LARGE = false
 
 INPUT_TYPE = "both"
 PACBIO_FLAG = ""
@@ -447,7 +449,7 @@ if (INPUT_TYPE == "both") {
 
 // Generates dot-line plots for comparing variable regions between two samples.
 // By default, does only filtered plots.
-if (INPUT_TYPE != "pacbio") {
+if (INPUT_TYPE != "pacbio" && params.LARGE == false) {
     process createVariableRegionComparisons {
         container "quay.io/greninger-lab/tprk:latest"
 
@@ -528,7 +530,15 @@ process visualizeAllData {
         file("all_*") into alldata_visual_ch
 
         script:
-        """
-        python3 ${ALLDATA_VISUALIZER} allreads_filtered.csv ${METADATA_FILE}
-        """
+        // Splits up htmls if large datasets, otherwise Bokeh can't open
+        if (params.LARGE == false) {
+            """
+            python3 ${ALLDATA_VISUALIZER} allreads_filtered.csv ${METADATA_FILE}
+            """
+        } else {
+            print("--LARGE flag specified. Splitting up alldata visualizations...")
+            """
+            python3 ${ALLDATA_VISUALIZER} allreads_filtered.csv ${METADATA_FILE} -large
+            """
+        }
 }

@@ -3,3 +3,4 @@ testPB/*
 example/*
 *.nextflow.*
 .nextflow/cache/*
+*.code-workspace
