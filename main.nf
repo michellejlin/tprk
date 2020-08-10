@@ -22,6 +22,7 @@ def helpMessage() {
         --ILLUMINA      Write this flag to specify that there are only Illumina files here.
                         Comparison figures to PacBio will not be generated.
         --LARGE         For very large datasets. Will not generate comparisons between files and will output htmls for variable regions separately.
+        --REFERENCE     Specify Illumina sample name (not file), to compare others to for dot-line plots. Can be used in tandem with --LARGE.
     
     Filtering Options
         --RF_FILTER         Optional flag for specifying what relative frequency
@@ -61,6 +62,7 @@ params.PACBIO = false
 params.ILLUMINA = false
 params.METADATA = false
 params.LARGE = false
+params.REFERENCE = false
 
 INPUT_TYPE = "both"
 PACBIO_FLAG = ""
@@ -449,7 +451,7 @@ if (INPUT_TYPE == "both") {
 
 // Generates dot-line plots for comparing variable regions between two samples.
 // By default, does only filtered plots.
-if (INPUT_TYPE != "pacbio" && params.LARGE == false) {
+if (INPUT_TYPE != "pacbio") {
     process createVariableRegionComparisons {
         container "quay.io/greninger-lab/tprk:latest"
 
@@ -470,9 +472,21 @@ if (INPUT_TYPE != "pacbio" && params.LARGE == false) {
         file("*.RData") into variable_region_ch2
 
         script:
-        """
-        Rscript ${VARIABLE_REGION_COMPARE} -d ./ -m ${METADATA_FILE} -c ${task.cpus}
-        """
+        if (params.REFERENCE != false) {
+            """
+            Rscript ${VARIABLE_REGION_COMPARE} -d ./ -m ${METADATA_FILE} -c ${task.cpus} -r ${params.REFERENCE}
+            """
+        }
+        else if (params.LARGE == false) {
+            """
+            Rscript ${VARIABLE_REGION_COMPARE} -d ./ -m ${METADATA_FILE} -c ${task.cpus}
+            """
+        } else {
+            """
+            echo "--LARGE specified and no --REFERENCE given. Skipping making variable region comparisons between Illumina samples..."
+            """
+        }
+        
     }
 }
 
