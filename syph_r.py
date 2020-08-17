@@ -27,11 +27,12 @@ V7_dna = list()
 
 # Takes in the input file and goes through line by line, defining the read name and read sequence.
 # Puts the read sequence through region_seq to match each read to the variable region/
-def find_region(sample, input_format, is_pacbio, current_dir):
+def find_region(sample, input_format, is_pacbio, current_dir, strain_name):
 	read_name = ""
 	read_seq = ""
 	region = ""
 	sample_name = sample.split("." + input_format)[0]
+	num_input_reads = 0
 
 	# Fastq files are in blocks of 4: with first line being name, second line being sequence,
 	# whereas fasta files are in blocks of 2.
@@ -44,11 +45,28 @@ def find_region(sample, input_format, is_pacbio, current_dir):
 		# Finds read name
 		if (line_num % line_block == 0):
 			read_name = line
+			# Illumina reads are read as one read = one count. PacBio reads are assumed to be RAD, and counts are
+			# found after the underscore in the read name.
+			if is_pacbio==False:
+				# read_name = read_name.split('-')[0]
+				read_count = 1
+			# Includes the count in PacBio names after FAD/RAD, may be [1] or [2] depending on file
+			else:
+				read_count = int(float(read_name.split('_')[1].rstrip()))
+			num_input_reads += read_count
 		# Finds read sequence
 		elif (line_num % line_block == 1):
 			read_seq = str((Seq(line, generic_dna).reverse_complement()))
 			# Matches each read seq to the region
-			region_seq(read_seq, read_name, sample_name, is_pacbio, current_dir)
+			region_seq(read_seq, read_name, sample_name, is_pacbio, current_dir, num_input_reads)
+		
+	summary_table(num_input_reads, strain_name)
+
+def summary_table(num_input_reads, strain_name):
+	table = open(current_dir + "/" + strain_name + "_summary_statistics.csv", "w+")
+	table.write("Sample,Total Input Reads,V1_Reads,V2_Reads,V3_Reads,V4_Reads,V5_Reads,V6_Reads,V7_Reads\n")
+	to_write = strain_name + "," + str(num_input_reads) + "," + str(total_count(V1_list)) + "," + str(total_count(V2_list)) + "," + str(total_count(V3_list)) + "," + str(total_count(V4_list)) + "," + str(total_count(V5_list)) + "," + str(total_count(V6_list)) + "," + str(total_count(V7_list))
+	table.write(to_write)
 
 # Matches a read to a specified string of nucleotides, "primer", with less than 3 errors.
 def fuzzy_match(read_seq, primer):
@@ -64,7 +82,7 @@ def fuzzy_match(read_seq, primer):
 
 
 # String matches a read to a variable region (V1-V7).
-def region_seq(read_seq, read_name, sample_name, is_pacbio, current_dir):
+def region_seq(read_seq, read_name, sample_name, is_pacbio, current_dir, num_input_reads):
 	# Different beginning portions for the variable regions.
 	variable_regions = {
 		"V1": "ATCAGTAGTAGTCTTAAATCC",
@@ -188,13 +206,13 @@ def make_table(strain_name, current_dir):
 	table.write("Region,Read,RelativeFreq,Count" + "\n")
 	table2.write("Region,Read,RelativeFreq,Count" + "\n")
 	for index, v_list in enumerate(Vlist_of_aas):
+		total = total_count(v_list)
 		for read_seq, count in v_list:
-			total = total_count(v_list)
 			table.write(variable_regions[index] + "," + read_seq + "," + 
 				str(((count / total) * 100)) + "," + str(count) + "\n")
 	for index, v_list in enumerate(Vlist_of_dna):
+		total = total_count(v_list)
 		for read_seq, count in v_list:
-			total = total_count(v_list)
 			table2.write(variable_regions[index] + "," + read_seq + "," + 
 				str(((count / total) * 100)) + "," + str(count) + "\n")
 
@@ -271,8 +289,9 @@ if __name__ == '__main__':
 		print(file_tobemade," already exists. Skipping making frequency tables...")
 	else:
 		print(file_tobemade,"")
+
 		# Matches each read to a region and starts building a list.
-		find_region(file_name, input_format, is_pacbio, current_dir)
+		find_region(file_name, input_format, is_pacbio, current_dir, strain_name)
 		
 		# Builds the frequency final_table.csv for each file.
 		make_table(strain_name, current_dir)

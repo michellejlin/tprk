@@ -219,6 +219,8 @@ if(INPUT_TYPE != "illumina") {
         errorStrategy 'retry'
         maxRetries 3
 
+        publishDir "${params.OUTDIR}/Tables/Frequency_Tables/", mode: 'copy', pattern: '*final_data.csv'
+
         input: 
             file(PACBIO_FILE) from pacbio_ch.collect()
             file(METADATA_FILE)
@@ -230,6 +232,7 @@ if(INPUT_TYPE != "illumina") {
 
             file "all_assignments.csv" into all_assignments_ch1
             file "compare_pacbio_df.csv" into compare_pacbio_ch
+            file("*summary_statistics.csv") into summary_stats_pacbio_ch
         
         script:
         """
@@ -267,11 +270,13 @@ if (INPUT_TYPE != "pacbio") {
     // Also grabs frequency tables from PacBio samples and merges the two,
     // creating allreads.csv file.
     process createFrequencyTables_Illumina {
-    container "quay.io/greninger-lab/tprk:latest"
+        container "quay.io/greninger-lab/tprk:latest"
 
+        publishDir "${params.OUTDIR}/Tables/", mode: 'copy', pattern: '*.csv'
+        
         // Retry on fail at most three times 
-        errorStrategy 'retry'
-        maxRetries 3
+        // errorStrategy 'retry'
+        // maxRetries 3
 
         input: 
             file(ILLUMINA_FILE) from illumina_ch.collect()
@@ -285,12 +290,65 @@ if (INPUT_TYPE != "pacbio") {
             file("*final_data.csv") into final_data_ch_ill
             file("all_assignments.csv") into all_assignments_ch2
             file("allreads.csv") into allreads_ch
+            file("*summary_statistics.csv") into summary_stats_ill_ch
         
         script:
         """
         gunzip -d --force *.gz
         Rscript ${COMPARE_DF} -s ${SYPH_R} -m ${METADATA_FILE} -d ./ --illumina -c ${task.cpus}
         """
+    }
+
+    process summaryStats_Illumina {
+        input:
+            file("*summary_statistics.csv") from summary_stats_ill_ch.collect()
+        output:
+            file("*.csv") into summary_stats_ill_ch2
+        publishDir "${params.OUTDIR}/Tables/", mode: 'copy', pattern: 'all_summary_stats.csv'
+
+        shell:
+        '''
+        echo Sample,Total Input Reads,V1_Reads,V2_Reads,V3_Reads,V4_Reads,V5_Reads,V6_Reads,V7_Reads > all_summary_stats.csv
+        for file in *summary_statistics.csv;do tail -n +2 $file>>all_summary_stats.csv;echo "" >> all_summary_stats.csv; done
+        inputreads=$(awk -F, '{ total += $2 } END { print total / (( NR - 1 ))}' all_summary_stats.csv)
+        V1=$(awk -F, '{ total += $3 } END { print total / (( NR - 1 ))}' all_summary_stats.csv)
+        V2=$(awk -F, '{ total += $4 } END { print total / (( NR - 1 ))}' all_summary_stats.csv)
+        V3=$(awk -F, '{ total += $5 } END { print total / (( NR - 1 ))}' all_summary_stats.csv)
+        V4=$(awk -F, '{ total += $6 } END { print total / (( NR - 1 ))}' all_summary_stats.csv)
+        V5=$(awk -F, '{ total += $7 } END { print total / (( NR - 1 ))}' all_summary_stats.csv)
+        V6=$(awk -F, '{ total += $8 } END { print total / (( NR - 1 ))}' all_summary_stats.csv)
+        V7=$(awk -F, '{ total += $9 } END { print total / (( NR - 1 ))}' all_summary_stats.csv)
+
+        echo "" >> all_summary_stats.csv
+        echo "mean:,"$inputreads","$V1","$V2","$V3","$V4","$V5","$V6","$V7"" >> all_summary_stats.csv
+        '''
+    }
+}
+
+if (INPUT_TYPE != "illumina") {
+    process summaryStats_PacBio {
+        input:
+            file("*summary_statistics.csv") from summary_stats_pacbio_ch.collect()
+        output:
+            file("*.csv") into summary_stats_pb_ch2
+        publishDir "${params.OUTDIR}/Tables/", mode: 'copy', pattern: 'all_summary_stats.csv'
+
+        shell:
+        '''
+        echo Sample,Total Input Reads,V1_Reads,V2_Reads,V3_Reads,V4_Reads,V5_Reads,V6_Reads,V7_Reads > all_summary_stats_pacbio.csv
+        for file in *summary_statistics.csv;do tail -n +2 $file>>all_summary_stats_pacbio.csv;echo "" >> all_summary_stats_pacbio.csv; done
+        inputreads=$(awk -F, '{ total += $2 } END { print total / (( NR - 1 ))}' all_summary_stats_pacbio.csv)
+        V1=$(awk -F, '{ total += $3 } END { print total / (( NR - 1 ))}' all_summary_stats_pacbio.csv)
+        V2=$(awk -F, '{ total += $4 } END { print total / (( NR - 1 ))}' all_summary_stats_pacbio.csv)
+        V3=$(awk -F, '{ total += $5 } END { print total / (( NR - 1 ))}' all_summary_stats_pacbio.csv)
+        V4=$(awk -F, '{ total += $6 } END { print total / (( NR - 1 ))}' all_summary_stats_pacbio.csv)
+        V5=$(awk -F, '{ total += $7 } END { print total / (( NR - 1 ))}' all_summary_stats_pacbio.csv)
+        V6=$(awk -F, '{ total += $8 } END { print total / (( NR - 1 ))}' all_summary_stats_pacbio.csv)
+        V7=$(awk -F, '{ total += $9 } END { print total / (( NR - 1 ))}' all_summary_stats_pacbio.csv)
+
+        echo "" >> all_summary_stats_pacbio.csv
+        echo "mean:,"$inputreads","$V1","$V2","$V3","$V4","$V5","$V6","$V7"" >> all_summary_stats_pacbio.csv
+        '''
     }
 }
 
@@ -468,8 +526,8 @@ if (INPUT_TYPE != "pacbio") {
         file(METADATA_FILE)
 
         output:
-        file("*.pdf") into variable_region_ch
-        file("*.RData") into variable_region_ch2
+        file("*.pdf") optional true into variable_region_ch
+        file("*.RData") optional true into variable_region_ch2
 
         script:
         if (params.REFERENCE != false) {
