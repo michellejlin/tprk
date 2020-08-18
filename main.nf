@@ -78,6 +78,7 @@ PACBIO_VS_ILLUMINA = file("${baseDir}/PacBio_v_Illumina_plots.R")
 VARIABLE_REGION_COMPARE = file("${baseDir}/Variable_region_compare.R")
 ALLDATA_VISUALIZER = file("${baseDir}/alldata_visualizer_alex.py")
 PACBIOTREE = file("${baseDir}/PacBio2tree.R")
+SUBSET_TPRK = file("${baseDir}/subset_tprk_output.R")
 
 /////////////////////////////
 /*    VALIDATE INPUTS      */
@@ -219,7 +220,7 @@ if(INPUT_TYPE != "illumina") {
         errorStrategy 'retry'
         maxRetries 3
 
-        publishDir "${params.OUTDIR}/Tables/Frequency_Tables/", mode: 'copy', pattern: '*final_data.csv'
+        publishDir "${params.OUTDIR}/Tables/Frequency_Tables/", mode: 'copy', pattern: '*.csv'
 
         input: 
             file(PACBIO_FILE) from pacbio_ch.collect()
@@ -229,7 +230,7 @@ if(INPUT_TYPE != "illumina") {
         output:
             file("*final_data.csv") into pacbio_final_data_ch
             file("*final_data.csv") into final_data_ch_pb
-
+            file("*final_dna_data.csv") into final_dna_data_ch_pacbio
             file "all_assignments.csv" into all_assignments_ch1
             file "compare_pacbio_df.csv" into compare_pacbio_ch
             file("*summary_statistics.csv") into summary_stats_pacbio_ch
@@ -288,6 +289,7 @@ if (INPUT_TYPE != "pacbio") {
         output:
             file("*final_data.csv") into illumina_final_data_ch
             file("*final_data.csv") into final_data_ch_ill
+            file("*final_dna_data.csv") into final_dna_data_ch
             file("all_assignments.csv") into all_assignments_ch2
             file("allreads.csv") into allreads_ch
             file("*summary_statistics.csv") into summary_stats_ill_ch
@@ -376,6 +378,7 @@ process filterReads {
       file "allreads_filtered.csv" into allreads_filt_ch
       file "allreads_filtered_heatmap.csv" into allreads_filt_heatmap_ch
       file "allreads.csv" into allreads_ch2
+      file "allreads_filtered.csv" into filt_subset_ch
 
     script:
     """
@@ -548,6 +551,27 @@ if (INPUT_TYPE != "pacbio") {
     }
 }
 
+process subsetReads {
+    container "quay.io/greninger-lab/tprk:latest"
+
+    // Retry on fail at most three times 
+    errorStrategy 'retry'
+    maxRetries 3
+
+    publishDir "${params.OUTDIR}Tables/", mode: 'copy'
+
+    input:
+    file("allreads_filtered.csv") from filt_subset_ch
+    file(SUBSET_TPRK)
+
+    output:
+    file("allreads_filt_*.csv") into subset_ch
+
+    script:
+    """
+    Rscript ${SUBSET_TPRK}
+    """
+}
 
 if (INPUT_TYPE != "illumina") {
     // Creates a ggtree of all the PacBio samples.

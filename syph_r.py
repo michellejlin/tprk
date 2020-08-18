@@ -202,7 +202,7 @@ def make_table(strain_name, current_dir):
 	variable_regions = ["V1", "V2", "V3", "V4", "V5", "V6", "V7"]
 
 	table = open(current_dir + "/" + strain_name + "_final_data.csv", "w+")
-	table2 = open(current_dir + "/over5count_" + strain_name + "_final_data_dna.csv", "w+")
+	table2 = open(current_dir + "/" + strain_name + "_over5count_final_dna_data.csv", "w+")
 	table.write("Region,Read,RelativeFreq,Count" + "\n")
 	table2.write("Region,Read,RelativeFreq,Count" + "\n")
 	for index, v_list in enumerate(Vlist_of_aas):
