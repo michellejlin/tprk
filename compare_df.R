@@ -52,13 +52,14 @@ nop <- file.path(noprimer_filenames)
 if(opt$illumina == FALSE) {
   RAD_filenames <- paste(substr(basename(PacBio_fns),1,nchar(basename(PacBio_fns))-8),"noprimers.filtered.RAD.fasta",sep ='')
   RAD_files <- file.path(RAD_filenames)
-  RAD_files_nolines <- paste(substr(RAD_files,1,nchar(RAD_files)-8),"nolines.fasta",sep ='')
-  RAD_files_fix <- paste(substr(RAD_files,1,nchar(RAD_files)-8),"nolines.fix.fasta",sep ='')
+  RAD_files_nolines <- paste(substr(RAD_files,1,nchar(RAD_files)-5),"nolines.fasta",sep ='')
+  RAD_files_fix <- paste(substr(RAD_files,1,nchar(RAD_files)-5),"nolines.fix.fasta",sep ='')
   
   print("Making PacBio frequency files...")
   # Calls syph_r to make the final_data.csv for each PacBio sample. Parallelized.
   foreach(i=1:length(RAD_files_fix)) %dopar% {
-    PB_file_name <- substr(RAD_files_fix[i],1,nchar(RAD_files_fix[i])-3)
+    print(RAD_files_fix)
+    PB_file_name <- substr(RAD_files_fix[i],1,nchar(RAD_files_fix[i]))
     print(PB_file_name)
     syphrPacBio_command <- paste("python3 ",syph_path," -i fasta -pacbio -d . -s ",PB_file_name,sep='')
     system(syphrPacBio_command)

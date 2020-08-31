@@ -349,7 +349,7 @@ if __name__ == '__main__':
 			brew_pal = purd 
 		# Reverse the colors so darker colors at max
 		brew_pal = brew_pal[::-1]
-		mapper = LinearColorMapper(palette=brew_pal, low=2, high=100, low_color = "#ededed")
+		mapper = LinearColorMapper(palette=brew_pal, low=1, high=100, low_color = "#ffffff")
 
 
 		# Set different scales of plot sizes for large datasets
@@ -357,8 +357,8 @@ if __name__ == '__main__':
 			pheight = (len(sample_reads)*15)
 			pwidth = (len(sample_list)*18) + (len(max(sample_reads, key = len)) * 8)
 		else:
-			pheight = 350
-			pwidth = (len(sample_list)*18) + (len(max(sample_reads, key = len)) * 8)
+			pheight = (len(sample_reads)*22)
+			pwidth = (len(sample_list)*28) + (len(max(sample_reads, key = len)) * 10)
 
 		hm = figure(
 			x_range=sample_list, y_range=sample_reads, title = variable_region, 
@@ -396,11 +396,11 @@ if __name__ == '__main__':
 			save(fig)
 
 	if args.svg:
-		for myfig in variable_region_figs:
-			myfig.output_backend = "svg"
-			output_filename = myfig.title.text + ".svg"
-			output_file(output_filename)
-			export_svgs(myfig, filename=output_filename)
+		# for myfig in variable_region_figs:
+		# 	myfig.output_backend = "svg"
+		# 	output_filename = myfig.title.text + ".svg"
+		# 	output_file(output_filename)
+		# 	export_svgs(myfig, filename=output_filename)
 		for myhm in variable_region_hms:
 			myhm.output_backend = "svg"
 			output_filename = myhm.title.text + "_heatmap.svg"

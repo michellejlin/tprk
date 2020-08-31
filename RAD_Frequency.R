@@ -55,7 +55,7 @@ if(opt$illumina == FALSE) {
   ## Points to Julia install in docker "quay.io/greninger-lab/tprk"
   julia <- julia_setup(JULIA_HOME = "/usr/local/julia/bin")
   ## Remove primers
-  foreach(count=1:length(nop)) %dopar% {
+  for (count in c(1:length(nop))) {
     if(file.exists(nop[count])) {
       print(paste(noprimer_filenames[count], " already exists. Skipping removing primers step...", sep=""))
     } else {
@@ -74,7 +74,7 @@ if(opt$illumina == FALSE) {
   filtEE1 <- file.path(filterEE1_filenames)
   
   ## Filter reads for tprK length and do not worry about expected errors.
-  foreach(count=1:length(filt)) {
+  for (count in c(1:length(filt))) {
     if (file.exists(filt[count])) {
       print(paste(filter_filenames[count]," already exists. Skipping filtering step..."), sep="")
     } else {
@@ -97,7 +97,7 @@ if(opt$illumina == FALSE) {
   
      
   ## Build RAD files for each PacBio sample. This step takes forever!!!
-  foreach(count=1:length(filt)) {
+  for (count in c(1:length(filt))) {
     to_rad_name <- paste(RAD_filenames[count])
     # Skips RAD step if files already exist, because it takes forever.
     if(file.exists(to_rad_name)) {

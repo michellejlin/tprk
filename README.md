@@ -29,7 +29,7 @@ Put the following things in one folder:
 
 | SampleName  | Illumina  | PacBio |
 | ------------- | ------------- | ------------- |
-| This will largely be the name used for generating tables and plots. | Should be in format Ill_[sample name].fastq.gz. The Illumina file specified for the sample name. This must match exactly the name of the matching file in the folder. This should be a trimmed file run through Trimmomatic. | Should be in format PB_[sample name].fasta.gz. The PacBio file specified for the sample name. This must match exactly the name of the matching file in the folder. This should be a Q20 file.  | 
+| This will largely be the name used for generating tables and plots. | Should be in format Ill_[sample name].fastq.gz. The Illumina file specified for the sample name. This must match exactly the name of the matching file in the folder. This should be a trimmed file run through Trimmomatic. | Should be in format PB_[sample name].fastq.gz. The PacBio file specified for the sample name. This must match exactly the name of the matching file in the folder. This should be a Q20 file.  | 
 
 ## Usage
 - Example command for just Illumina files in current directory on a laptop without many CPUs: ```nextflow run michellejlin/tprk -r nextflow --INPUT ./ --OUTDIR output/ --ILLUMINA --METADATA metadata.csv -resume -with-docker ubuntu:18.04 -with-trace -profile laptop```

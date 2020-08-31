@@ -91,7 +91,7 @@ def region_seq(read_seq, read_name, sample_name, is_pacbio, current_dir, num_inp
 		"V3": "AGCACACAGACCCCAAAGCTT",
 		"V4": "AACAACGCATCTGCGCC",
 		"V5": "CCTTGGTTTCGAGCTT",
-		"V6": "CATACACCGGGAAGTT",
+		"V6": "TTCCATACACCGGGAA",
 		"V7": "CGGACTGACCACTACCCCACACTC"
 	}
 

@@ -16,7 +16,7 @@ opt <- parse_args(opt_parser)
 #path <- opt$directory
 path <- "./"
 
-if (opt$relativefreq) {
+if (! is.null(opt$relativefreq)) {
   rf_cutoff = as.numeric(opt$relativefreq)
 } else {
   rf_cutoff = 0.2
@@ -53,12 +53,11 @@ df2BString=function(df){
   return(BString)
 }
 
-
 ## Function to remove translated ORFs with stop codons
 removeTruncatedORF=function(AAFile){
   AAFile[,2]$sequences<-as.character(AAFile[,2]$sequences)
 
-  for (num in c(1:length(AAFile[,2]))){
+  for (num in c(1:length(nrow(allAA[,2])))){
     if (!(regexpr("\\*", AAFile[num,2]) == nchar(AAFile[num,2]))){
       AAFile[num,] <- NA}
   }
@@ -75,7 +74,7 @@ removeFrameShift=function(AAFile){
                  "YFPVYGKVWGSYRHDMGEYG",
                  "WEQGKLQENSNVVIEKNVTE")
   AAFile[,2]$sequences<-as.character(AAFile[,2]$sequences)
-  for (num in c(1:length(AAFile[,2]))){
+  for (num in c(1:nrow(allAA[,2]))){
       frameShift <- FALSE
       for (i in c(1:length(conserved))){
         if (agrepl(conserved[i],AAFile[num,2],max.distance=3,ignore.case=TRUE) == 0){
@@ -98,7 +97,8 @@ allAA <- list()
 allAAfilt <- list()
 
 for (i in 1:length(PacBio_fns)) {
-  fastafile_name <- paste((substr(PacBio_fns[i],1,nchar(PacBio_fns[i])-6)),".noprimers.filtered.RAD.nolines.fix.fasta",sep="")
+  fastafile_name <- paste((substr(PacBio_fns[i],1,nchar(PacBio_fns[i])-9)),".noprimers.filtered.RAD.nolines.fix.fasta",sep="")
+  #fastafile_name <- PacBio_fns[i]
   fastafile <- reverseComplement(readDNAStringSet(fastafile_name))
   names(fastafile) <- paste(sample_names[i],"_",names(fastafile),sep="")
   fasta_files <- c(fasta_files,fastafile)
@@ -108,16 +108,26 @@ for (i in 1:length(PacBio_fns)) {
   aa_list <- c(aa_list, amino_acids)
   df_aa <- BString2df(amino_acids)
   
-  df_aa <- mutate(df_aa,sample=sapply(strsplit(as.character(names),"_"),"[",1),
-                  count=as.numeric(sapply(strsplit(as.character(names),"_"),"[",3)))
-  
+  print(df_aa)
+
+  #df_aa <- mutate(df_aa,sample=sapply(strsplit(as.character(names),"_"),"[",1),
+  #                count=as.numeric(sapply(strsplit(as.character(names),"_"),"[",3)))
+  df_aa <- mutate(df_aa,sample=sample_names[i],
+            count=as.numeric(sapply(strsplit(as.character(names),"_"),tail,1)))
+
   ##Combine same TprKs
   df_aa <- data.table(df_aa)
   df_aa <- df_aa[order(-df_aa$count),]
   df_aa <- df_aa[,list(names,sample,count=sum(count)),by='sequences']
   df_aa <- df_aa[!duplicated(df_aa$sequences),]
+  print("before df aa")
+  print(df_aa)
   df_aa$names <- paste(df_aa$sample,sapply(strsplit(as.character(df_aa$names), split="_"), "[", 2),df_aa$count,sep="_")
+  print("after")
+  print(df_aa)
+  print("c after")
   df_aa <- df_aa[,c(2,1,3,4)]
+  print(df_aa)
   df_aa <- mutate(df_aa,percentage=round(count / sum(count)*100,3))
   df_aa_filt <- filter(df_aa,percentage>= rf_cutoff)
   df_aa_list[[i]] <- df_aa
@@ -141,7 +151,6 @@ allAAfilt_fullORFs_df <- drop_na(removeFrameShift(allAAfilt_fullORFs_df))
 
 print("all aa filt full orfs df")
 print(allAAfilt_fullORFs_df)
-print("end")
 
 allAAfilt_fullORFs_df[which(duplicated(allAAfilt_fullORFs_df$sequences) == TRUE),]
 print("now which duplicated")

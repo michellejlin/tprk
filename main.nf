@@ -195,7 +195,7 @@ if(INPUT_TYPE != "illumina") {
 
         // Retry on fail at most three times 
         errorStrategy 'retry'
-        maxRetries 3
+        maxRetries 0
 
         input: 
             tuple val(sample_name), file(PACBIO_FILE) from input_pacbio_ch
@@ -208,7 +208,8 @@ if(INPUT_TYPE != "illumina") {
         script:
         """
         gunzip -d --force *.gz
-        Rscript ${RAD_FREQUENCY} -s ${baseDir} -d ${params.INPUT} -m ${METADATA_FILE} -a ${PACBIO_FILE} -c ${task.cpus}
+        echo ${PACBIO_FILE}
+        Rscript ${RAD_FREQUENCY} -s ${baseDir} -d ${params.INPUT} -m ${METADATA_FILE} -a PB_${sample_name}.fastq -c ${task.cpus}
         """
     }
 
@@ -218,7 +219,7 @@ if(INPUT_TYPE != "illumina") {
 
         // Retry on fail at most three times 
         errorStrategy 'retry'
-        maxRetries 3
+        maxRetries 0
 
         publishDir "${params.OUTDIR}/Tables/Frequency_Tables/", mode: 'copy', pattern: '*.csv'
 
@@ -237,7 +238,7 @@ if(INPUT_TYPE != "illumina") {
         
         script:
         """
-        gunzip -d --force *.gz
+        #gunzip -d --force *.gz
         Rscript ${COMPARE_DF} -s ${SYPH_R} -m ${METADATA_FILE} -d ./ --pacbio -c ${task.cpus}
         """
     }
@@ -573,38 +574,38 @@ process subsetReads {
     """
 }
 
-if (INPUT_TYPE != "illumina") {
-    // Creates a ggtree of all the PacBio samples.
-    // Currently automatically roots by midpoint, but will have to manually 
-    // reorder by certain branch if needed.
-    // Also saves ggtree in RDS which can be accessed with readRDS() in R for manual edits.
-    process createPacBioTree{
-        container "quay.io/greninger-lab/tprk:latest"
+// if (INPUT_TYPE != "illumina") {
+//     // Creates a ggtree of all the PacBio samples.
+//     // Currently automatically roots by midpoint, but will have to manually 
+//     // reorder by certain branch if needed.
+//     // Also saves ggtree in RDS which can be accessed with readRDS() in R for manual edits.
+//     process createPacBioTree{
+//         container "quay.io/greninger-lab/tprk:latest"
 
-        // Retry on fail at most three times 
-        errorStrategy 'retry'
-        maxRetries 3
+//         // Retry on fail at most three times 
+//         errorStrategy 'retry'
+//         maxRetries 0
 
-        publishDir "${params.OUTDIR}Figures/Tree", mode: 'copy'
+//         publishDir "${params.OUTDIR}Figures/Tree", mode: 'copy'
 
-        input:
-        file(METADATA_FILE)
-        file(PACBIOTREE)
-        file(PACBIO_FILE) from pacbio_ch2.collect()
+//         input:
+//         file(METADATA_FILE)
+//         file(PACBIOTREE)
+//         file(PACBIO_FILE) from pacbio_ch2.collect()
 
-        output:
-        file("PacBio_Tree_Filtered.pdf") into tree_ch
-        file("*_fullORFs.fasta") into tree_ch1
-        file("*.tsv") into tree_ch2
-        file("*.nwk") into tree_ch3
-        file("*.RData") into tree_ch4
+//         output:
+//         file("PacBio_Tree_Filtered.pdf") into tree_ch
+//         file("*_fullORFs.fasta") into tree_ch1
+//         file("*.tsv") into tree_ch2
+//         file("*.nwk") into tree_ch3
+//         file("*.RData") into tree_ch4
 
-        script:
-        """
-        Rscript ${PACBIOTREE} -d . -m ${METADATA_FILE} -r ${params.RF_FILTER}
-        """
-    }
-}
+//         script:
+//         """
+//         Rscript ${PACBIOTREE} -d . -m ${METADATA_FILE} -r ${params.RF_FILTER}
+//         """
+//     }
+// }
 
 // Generates visualizations (heatmap and variable regions) for filtered
 // allreads.csv. Default is html.
