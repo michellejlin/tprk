@@ -46,13 +46,8 @@ alldata <- read.csv(allreads_filtered,header=TRUE,sep=",",stringsAsFactors = FAL
 if (ref_sample == FALSE) {
   # Loops through and generates variable region comparisons for all the combinations of files.
   # This means a lot of files if list is long.
-  print(length(sample_names) - 1)
-  print(length(sample_names))
   for (i in 1:(length(sample_names) - 1)) {
-    foreach(j=i+1:(length(sample_names) - 1)) %dopar% {
-      print(i)
-      print(j)
-      print(length(sample_names))
+    foreach(j=i+1:(length(sample_names) - 1)) %dopar% 
       print(paste("Generating figure for ",sample_names[i]," and ",sample_names[j],"...",sep=""))
       rfcol <- paste("Ill_",sample_names[i],"_RelativeFreq",sep = "")
       rfcol2 <- paste("Ill_",sample_names[j],"_RelativeFreq",sep = "")
