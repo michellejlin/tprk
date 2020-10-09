@@ -1,6 +1,6 @@
 ## Load packages
 list.of.packages <- c("JuliaCall", "reticulate", "optparse", "ggplot2",
-                      "reshape2", "optparse", "dada2", "ShortRead", "foreach", "iterators", "doParallel")
+                      "reshape2", "optparse", "dada2", "ShortRead")
 lapply(list.of.packages,library,character.only = TRUE)
 
 ##Specifying Illumina vs. PacBio files, and what the sample name is.
@@ -17,12 +17,6 @@ option_list <- list(make_option(c("-s", "--script_path"), type="character", defa
                                 metavar="character", action="store_true"));
 opt_parser <- OptionParser(option_list=option_list);
 opt <- parse_args(opt_parser)
-
-cpus = opt$cpus
-num_cores <- strsplit(cpus, "[ gb]")[[1]][1]
-print(num_cores)
-# Specify number of cores for parallelizing frequency table creation
-registerDoParallel(cores=num_cores)
 
 path <- opt$directory
 script.dir <- opt$script_path

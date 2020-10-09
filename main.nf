@@ -31,9 +31,6 @@ def helpMessage() {
         --COUNT_FILTER      Optional flag for specifying what count
                             an additional filtered final merged table and visualizations should be sorted at.
                             By default this is set to 5.
-        --ILLUMINA_FILTER   Optional flag for specifying if PacBio reads should only include
-                            Illumina-supported reads that pass the filters given. Default relative freq is
-                            set to 0.2 and count is set to 5.
         
     """.stripIndent()
 }
@@ -198,18 +195,17 @@ if(INPUT_TYPE != "illumina") {
         maxRetries 0
 
         input: 
-            tuple val(sample_name), file(PACBIO_FILE) from input_pacbio_ch
+            tuple val(base), file(PACBIO_FILE) from input_pacbio_ch
             file(RAD_FREQUENCY)
         output:
-            tuple val(sample_name), file("PB_${sample_name}.noprimers.filtered.RAD.nolines.fix.fasta") into pacbio_ch
-            tuple val(sample_name), file("PB_${sample_name}.noprimers.filtered.RAD.nolines.fix.fasta") into pacbio_ch2
-            val(sample_name) into pacbio_sample_name_ch
+            tuple val(base), file("PB_${base}.noprimers.filtered.RAD.nolines.fix.fasta") into pacbio_ch
+            tuple val(base), file("PB_${base}.noprimers.filtered.RAD.nolines.fix.fasta") into pacbio_ch2
+            val(base) into pacbio_sample_name_ch
         
         script:
         """
         gunzip -d --force *.gz
-        echo ${PACBIO_FILE}
-        Rscript ${RAD_FREQUENCY} -s ${baseDir} -d ${params.INPUT} -m ${METADATA_FILE} -a PB_${sample_name}.fastq -c ${task.cpus}
+        Rscript ${RAD_FREQUENCY} -s ${baseDir} -d ${params.INPUT} -m ${METADATA_FILE} -a PB_${base}.fastq -c ${task.cpus}
         """
     }
 
@@ -294,6 +290,7 @@ if (INPUT_TYPE != "pacbio") {
             file("all_assignments.csv") into all_assignments_ch2
             file("allreads.csv") into allreads_ch
             file("*summary_statistics.csv") into summary_stats_ill_ch
+            file("*") into illumina_frequency_tables_ch
         
         script:
         """

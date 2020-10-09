@@ -1,4 +1,3 @@
-# Syphilis Project
 import subprocess
 import argparse
 import sys
@@ -7,7 +6,6 @@ import regex
 from itertools import chain
 import numpy as np
 from Bio.Seq import Seq
-from Bio.Alphabet import generic_dna
 import pandas as pd
 
 V1_list = list()	
@@ -56,7 +54,7 @@ def find_region(sample, input_format, is_pacbio, current_dir, strain_name):
 			num_input_reads += read_count
 		# Finds read sequence
 		elif (line_num % line_block == 1):
-			read_seq = str((Seq(line, generic_dna).reverse_complement()))
+			read_seq = str((Seq(line).reverse_complement()))
 			# Matches each read seq to the region
 			region_seq(read_seq, read_name, sample_name, is_pacbio, current_dir, num_input_reads)
 		
@@ -86,11 +84,14 @@ def region_seq(read_seq, read_name, sample_name, is_pacbio, current_dir, num_inp
 	# Different beginning portions for the variable regions.
 	variable_regions = {
 		"V1": "ATCAGTAGTAGTCTTAAATCC",
-		"V2": "CCGAACAAAATATCTCC",
+		#"V2": "CCGAACAAAATATCTCC",
+		"V2": "AATATCTCCCCCCAATCCATA",
 		# "V3": "GCCCCGACATCCCATAAGAT", #148B-148B2
-		"V3": "AGCACACAGACCCCAAAGCTT",
+		#"V3": "AGCACACAGACCCCAAAGCTT",
+		"V3": "TCATACTCACCTTAGCCCCGAC",
 		"V4": "AACAACGCATCTGCGCC",
-		"V5": "CCTTGGTTTCGAGCTT",
+		#"V5": "CCTTGGTTTCGAGCTT",
+		"V5": "TCGAGCTTAATATAGGCAGC",
 		"V6": "TTCCATACACCGGGAA",
 		"V7": "CGGACTGACCACTACCCCACACTC"
 	}
@@ -99,7 +100,7 @@ def region_seq(read_seq, read_name, sample_name, is_pacbio, current_dir, num_inp
 	for region, primer in variable_regions.items():
 		# If a read matches the primer with fuzzy matching less than 3 errors, then continue
 		# Also reverses the read and tries that too
-		read_seq_rev = str((Seq(read_seq, generic_dna).reverse_complement()))
+		read_seq_rev = str((Seq(read_seq).reverse_complement()))
 		match_seq = fuzzy_match(read_seq, primer)
 		match_seq_rev = fuzzy_match(read_seq_rev, primer)
 
@@ -124,13 +125,13 @@ def region_seq(read_seq, read_name, sample_name, is_pacbio, current_dir, num_inp
 					v_list = V1_list
 					v_dna = V1_dna
 			elif (region == "V2"):
-				start = (str.index(read_seq, match_seq) + 17)
+				start = (str.index(read_seq, match_seq) + 21)
 				if fuzzy_match(read_seq, "GTCGGTGTTAGACGCAAA"):
 					end = (str.index(read_seq, fuzzy_match(read_seq, "GTCGGTGTTAGACGCAAA")))
 					v_list = V2_list
 					v_dna = V2_dna
 			elif (region == "V3"):
-				start = (str.index(read_seq, match_seq) + 20)
+				start = (str.index(read_seq, match_seq) + 22)
 				if fuzzy_match(read_seq, "GGAGTTGCCGGTGAGCTC"):
 					end = (str.index(read_seq, fuzzy_match(read_seq, "GGAGTTGCCGGTGAGCTC")))
 					v_list = V3_list
@@ -143,7 +144,7 @@ def region_seq(read_seq, read_name, sample_name, is_pacbio, current_dir, num_inp
 					v_dna = V4_dna
 			elif (region == "V5"):
 				# Find the beginning of the region following the primer
-				start = (str.index(read_seq, match_seq) + 16)
+				start = (str.index(read_seq, match_seq) + 20)
 				# Find the end of the region
 				if fuzzy_match(read_seq, "CGATGCGAAATATCCTCC"):
 					end = (str.index(read_seq, fuzzy_match(read_seq, "CGATGCGAAATATCCTCC")))
@@ -165,7 +166,7 @@ def region_seq(read_seq, read_name, sample_name, is_pacbio, current_dir, num_inp
 				# Grabs what we now found as the region
 				region_seq = read_seq[start:end]
 				# Translates the sequence
-				region_nuc = str((Seq(region_seq, generic_dna).reverse_complement()))
+				region_nuc = str((Seq(region_seq).reverse_complement()))
 				region_seq = translate_nucs(region_nuc)
 				all_assignments.write(sample_name + "," + read_name.rstrip()  + "," + region_seq + "," + 
 					region_nuc + "," + region + "\n")
@@ -213,15 +214,16 @@ def make_table(strain_name, current_dir):
 	for index, v_list in enumerate(Vlist_of_dna):
 		total = total_count(v_list)
 		for read_seq, count in v_list:
-			table2.write(variable_regions[index] + "," + read_seq + "," + 
-				str(((count / total) * 100)) + "," + str(count) + "\n")
+			if(count>=5):
+				table2.write(variable_regions[index] + "," + read_seq + "," + 
+					str(((count / total) * 100)) + "," + str(count) + "\n")
 
 	# Filters out the lines with greater than 1% to a separate _final_data_fitered.csv.
 	#subprocess.call("awk -F\"[,|\\(]\" \'($3+0)>=1{print}\' " + strain_name + "_final_data.csv > " + strain_name + "_final_data_filtered.csv", shell=True)
 
 # Translates a string of nucleotides into amino acids.
 def translate_nucs(read_seq):
-	coding_dna = Seq(read_seq, generic_dna)
+	coding_dna = Seq(read_seq)
 	translation = str(coding_dna.translate())
 	return translation
 

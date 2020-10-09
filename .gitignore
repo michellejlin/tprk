@@ -4,3 +4,4 @@ example/*
 *.nextflow.*
 .nextflow/cache/*
 *.code-workspace
+.DS_Store
