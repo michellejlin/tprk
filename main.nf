@@ -201,7 +201,9 @@ if(INPUT_TYPE != "illumina") {
             tuple val(base), file("PB_${base}.noprimers.filtered.RAD.nolines.fix.fasta") into pacbio_ch
             tuple val(base), file("PB_${base}.noprimers.filtered.RAD.nolines.fix.fasta") into pacbio_ch2
             val(base) into pacbio_sample_name_ch
-        
+	    
+	publishDir "${params.OUTDIR}/denoised_fastas", mode: 'copy', pattern: '*.fix.fasta'
+       
         script:
         """
         gunzip -d --force *.gz
