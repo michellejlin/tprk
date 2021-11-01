@@ -229,6 +229,7 @@ if(INPUT_TYPE != "illumina") {
             file("*final_data.csv") into final_data_ch_pb
             file("*final_dna_data.csv") into final_dna_data_ch_pacbio
             file "all_assignments.csv" into all_assignments_ch1
+	    file("allreads.csv") into allreads_ch
             file "compare_pacbio_df.csv" into compare_pacbio_ch
             file("*summary_statistics.csv") into summary_stats_pacbio_ch
         
